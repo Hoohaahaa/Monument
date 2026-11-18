@@ -1,0 +1,34 @@
+# Monument
+
+A platform for creating, placing, discovering, and sharing persistent spatial experiences in the real world.
+
+Monument is an independent product. Its customer experience, business logic, operational data, runtime, and release lifecycle remain separate from NO OS and the personal portfolio.
+
+## Product loop
+
+- Create: author spatial objects, content, geometry, and interaction rules.
+- Place: anchor persistent Moments to real-world locations and spatial strata.
+- Discover: find experiences through globe, map, camera, and contextual views.
+- Interact: participate alone or with others through persistent content and live Sessions.
+- Evolve: preserve versions, provenance, moderation history, and change history.
+
+## Core domain
+
+World → Place → Moment → Session → Participant / Interaction → Event / State History.
+
+A Moment is a persistent spatial entity. A Session is a time-bounded live instance in which people interact with one or more Moments. Persistence and live presence are separate concepts.
+
+## Architecture status
+
+This repository begins with architecture and product decisions. Documents are hypotheses or accepted constraints only where explicitly labelled. A documented capability is not necessarily implemented, tested, or operational.
+
+- [Place and World Model](docs/architecture/PLACE_AND_WORLD_MODEL.md)
+- [Realtime and Multiplayer Architecture](docs/architecture/REALTIME_MULTIPLAYER.md)
+- [Cairn Reuse Assessment](docs/research/CAIRN_REUSE_ASSESSMENT.md)
+- [NO OS Alignment](docs/architecture/NO_OS_ALIGNMENT.md)
+- [Monetization Hypotheses](docs/business/MONETIZATION_HYPOTHESES.md)
+- [Decision Record](docs/decisions/0001-place-and-persistent-moments.md)
+
+## Working rules
+
+Evidence before certainty. Product autonomy and explicit integration contracts. Smallest sufficient architecture. Least privilege and data minimization. Distinguish proposed, implemented, tested, and operational states. Document alternatives, failure paths, costs, and revisit conditions.
