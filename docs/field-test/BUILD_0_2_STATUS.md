@@ -10,7 +10,7 @@
 
 - Mobile-first spatial authoring interface with orange `#FF573D` accent and eight-square mark.
 - Create/edit a Moment with title, body, optional externally hosted media URL.
-- Select placement by map tap, draggable map marker, coordinate entry, current GPS, or place search (OpenStreetMap Nominatim).
+- Select placement by map tap, coordinate entry, current GPS, or place search (OpenStreetMap Nominatim). The marker is visually draggable, but drag-to-coordinate synchronization is a known bug tracked in issue #4; use map tap or coordinate entry for now.
 - Select discovery visibility: 50 m, 500 m, 1 km, 10 km, 100 km, Global.
 - Set geometry width independently from discovery visibility.
 - Local browser persistence for created Moments.
