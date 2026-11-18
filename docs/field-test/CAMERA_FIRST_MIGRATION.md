@@ -31,3 +31,16 @@ The field projection calculation is exposed as Spatial.projectToFieldOfView and 
 - npm run build syntax-checks browser modules and creates the Vercel static output.
 - npm test runs the existing Spatial Core tests and new field projection tests.
 - Deployment and physical device QA are separate acceptance gates.
+
+
+## Browser interaction QA — 2026-11-18
+
+A headless Chromium run at a 390 × 844 mobile viewport verified:
+- Root app and `/new/landscape` route render; Leaflet map initializes.
+- Map clicks on unobstructed map areas update the selected coordinates; dragging the placement marker updates the map readout.
+- Field-test overlay opens; bottom action dock sits at the bottom of the mobile viewport.
+- With a simulated camera device and mocked GPS, the camera video stream reaches ready state and the GPS accuracy is surfaced.
+- The spatial surface can render in centered-preview mode while compass is unavailable; the UI explicitly says alignment is not confirmed.
+- No page-level JavaScript errors or failed network requests remain in the local-only mode.
+
+This is browser simulation, not physical-device acceptance. Headless Chromium cannot validate the phone's real compass, camera optics, GPS accuracy, Android permission UX, or AR tracking.
