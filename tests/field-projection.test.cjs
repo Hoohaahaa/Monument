@@ -31,5 +31,5 @@ test('missing compass heading remains explicitly unaligned',()=>{
 });
 test('invalid field of view is safely clamped',()=>{
  const p=Spatial.projectToFieldOfView(observer,90,target,0);
- assert.equal(p.fieldOfView,1); assert.equal(p.insideFov,false);
+ assert.equal(p.fieldOfView,1); assert.equal(p.insideFov,true); assert.equal(p.screenX,50);
 });
