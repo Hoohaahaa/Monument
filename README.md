@@ -18,6 +18,10 @@ World → Place → Moment → Session → Participant / Interaction → Event /
 
 A Moment is a persistent spatial entity. A Session is a time-bounded live instance in which people interact with one or more Moments. Persistence and live presence are separate concepts.
 
+## Product definition
+
+- [Product Blueprint v1](docs/product/PRODUCT_BLUEPRINT_V1.md)
+
 ## Architecture status
 
 This repository begins with architecture and product decisions. Documents are hypotheses or accepted constraints only where explicitly labelled. A documented capability is not necessarily implemented, tested, or operational.
