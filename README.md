@@ -29,6 +29,12 @@ This repository begins with architecture and product decisions. Documents are hy
 - [Monetization Hypotheses](docs/business/MONETIZATION_HYPOTHESES.md)
 - [Decision Record](docs/decisions/0001-place-and-persistent-moments.md)
 
+## Spatial Engine prototype
+
+The first spatial-engine prototype has been imported from the isolated Portfolio development branch. It is a browser prototype, not yet a production AR or persistent Moment platform. Run the pure geometry tests with `npm test` in a Node.js 20+ environment. The editor page is `engine.html`; its Leaflet assets are vendored under `vendor/`.
+
+See [migration status](docs/architecture/MIGRATION_STATUS.md) before treating the imported files as the complete application.
+
 ## Working rules
 
 Evidence before certainty. Product autonomy and explicit integration contracts. Smallest sufficient architecture. Least privilege and data minimization. Distinguish proposed, implemented, tested, and operational states. Document alternatives, failure paths, costs, and revisit conditions.
