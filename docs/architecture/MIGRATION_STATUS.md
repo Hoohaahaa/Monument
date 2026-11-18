@@ -54,3 +54,16 @@ The previous source branch lives inside a large personal Portfolio repository. C
 5. Run unit, integration, security, and physical Android device tests.
 6. Create/link a dedicated Monument Vercel project after the app is runnable; keep preview deployment separate from Portfolio.
 7. Keep Portfolio untouched; delete nothing from the source branch until the extracted app is verified.
+
+
+## Migration update — 2026-11-18
+
+The camera-first application shell and outdoor/indoor field-test modules have now been extracted into the standalone Monument repository on branch `restore-camera-first-field` (draft PR #8). The source Portfolio branch remains untouched.
+
+- Restored: `index.html`, `app.js`, `style.css`, `field.js`, `spatial.js`, `media.js`, `marker.js`, `xr.js`, and `sw.js`.
+- Added deterministic `npm run build`, Vercel static routing, and CI.
+- Added `Spatial.projectToFieldOfView` and six focused projection tests.
+- GitHub Actions build and tests pass: 15/15 tests.
+- The existing Spatial Lab remains unchanged.
+- Local authoring and IndexedDB media work without the unverified API backend; cloud account, registry, cross-device publishing, global discovery and analytics remain out of scope until the Neon schema and authorization model are audited.
+- Device QA, browser interaction QA and a new Vercel preview deployment remain pending. No production deployment or merge has occurred.
