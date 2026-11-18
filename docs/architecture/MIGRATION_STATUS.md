@@ -66,4 +66,5 @@ The camera-first application shell and outdoor/indoor field-test modules have no
 - GitHub Actions build and tests pass: 15/15 tests.
 - The existing Spatial Lab remains unchanged.
 - Local authoring and IndexedDB media work without the unverified API backend; cloud account, registry, cross-device publishing, global discovery and analytics remain out of scope until the Neon schema and authorization model are audited.
-- Device QA, browser interaction QA and a new Vercel preview deployment remain pending. No production deployment or merge has occurred.
+- Headless mobile browser interaction QA passed (map click/drag, field overlay, simulated camera and mocked GPS); physical-device QA remains pending.
+- Vercel preview deployment is READY at https://monument-field-test-6k8oku4od-mos-projects-efbc27a5.vercel.app. No production deployment or merge has occurred.
