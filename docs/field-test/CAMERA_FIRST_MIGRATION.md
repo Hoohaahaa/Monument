@@ -8,7 +8,7 @@
 - index.html, app.js, style.css
 - field.js, spatial.js, media.js, marker.js, xr.js, sw.js
 - Existing Spatial Lab files remain in place; no redesign or replacement of the Lab was performed.
-- Leaflet JS/CSS and license already present in Monument are reused.
+- Leaflet JS/CSS and license already present in Monument are reused; the five Leaflet layer/marker PNG assets are now vendored under `vendor/images/`.
 
 ## Preserved behavior
 - Camera-first outdoor field-test overlay with permission/session actions in the bottom dock.
