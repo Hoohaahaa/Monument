@@ -23,6 +23,7 @@ A Moment is a persistent spatial entity. A Session is a time-bounded live instan
 This repository begins with architecture and product decisions. Documents are hypotheses or accepted constraints only where explicitly labelled. A documented capability is not necessarily implemented, tested, or operational.
 
 - [Place and World Model](docs/architecture/PLACE_AND_WORLD_MODEL.md)
+- [Functional Globe ↔ Map Projection](docs/architecture/GLOBE_MAP_PROJECTION.md)
 - [Realtime and Multiplayer Architecture](docs/architecture/REALTIME_MULTIPLAYER.md)
 - [Cairn Reuse Assessment](docs/research/CAIRN_REUSE_ASSESSMENT.md)
 - [NO OS Alignment](docs/architecture/NO_OS_ALIGNMENT.md)
