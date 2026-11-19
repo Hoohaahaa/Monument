@@ -14,7 +14,7 @@ function convertAltitude(input={}){
  const geoid= input.geoidSeparationMeters;
  const venue= input.venueOriginAltitudeM;
  if((source==='AGL'||target==='AGL')&&!finite(terrain))return {valid:false,errors:['terrain_elevation_required'],value:null,datum:null,method:null};
- if((source==='WGS84_ELLIPSOID'&&target==='MSL'||source==='MSL'&&target==='WGS84_ELLIPSOID')&&!finite(geoid))return {valid:false,errors:['geoid_separation_required'],value:null,datum:null,method:null};
+ if((source==='WGS84_ELLIPSOID'||target==='WGS84_ELLIPSOID')&&!finite(geoid))return {valid:false,errors:['geoid_separation_required'],value:null,datum:null,method:null};
  if((source==='VENUE_LOCAL'||target==='VENUE_LOCAL')&&!finite(venue))return {valid:false,errors:['venue_origin_altitude_required'],value:null,datum:null,method:null};
  let msl;
  if(source==='MSL')msl=value;
