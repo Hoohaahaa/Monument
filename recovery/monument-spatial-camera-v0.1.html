@@ -120,7 +120,7 @@ function shiftTarget(meters){if(!point){$('status').textContent='Set a location 
 $('shift100').onclick=()=>shiftTarget(100);$('shift200').onclick=()=>shiftTarget(200);$('resetShift').onclick=()=>{if(!originalPoint){$('status').textContent='No test offset to reset.';return}initMap();setPoint(originalPoint.lat,originalPoint.lng);$('status').textContent='Restored original test position.';updateProjection()};
 $('saveLocal').onclick=persistLocal;
 const originalStartCamera=startCamera;
-startCamera=async function(){await originalStartCamera();if(stream){startLocationWatch();await startOrientation();updateProjection()}};
+startCamera=async function(){await startOrientation();await originalStartCamera();if(stream){startLocationWatch();updateProjection()}};$('openCamera').onclick=startCamera;
 $('gps').addEventListener('click',()=>{startLocationWatch();startOrientation()});
 $('publish').addEventListener('click',()=>{if(point)persistLocal()});
 restoreLocal();updateGeometryReadout();$('radiusLabel').textContent=$('radius').value+' m';
