@@ -42,3 +42,12 @@ This matrix separates source-confirmed functionality from the current integratio
 4. Connect drafts, revisions and public registry to a server backend. Keep local save, visitor link and global publication as distinct states.
 5. Add mobile browser E2E coverage at 390×844 and desktop, plus permission-denied, offline-map, GPS and visitor-link flows.
 6. Keep the current preview as the only recommended manual-test link; do not change production aliases.
+
+
+## 2026-11-19 usability repair pass
+
+- Camera permission is now user-initiated via **Open Camera**; the page no longer calls `getUserMedia()` during startup.
+- The persistent **Publish** action opens release review instead of immediately publishing. The in-sheet Publish action remains the explicit confirmation.
+- Publishing now requires at least one non-empty text, image URL or audio URL, in addition to model validation and a non-private audience.
+- Regression coverage added in `tests/app-shell-contract.test.cjs`.
+- Status: committed to the working branch; runtime/mobile browser verification and a new preview are still pending.
