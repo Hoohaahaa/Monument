@@ -1,6 +1,13 @@
 # Monument — Handoff for the next chat
 
 Last updated: 2026-11-19
+
+## New integration work completed
+
+- Added `engine/moment-model.js`: canonical schema for point, framed surface, column, sky surface and trajectory; indoor/outdoor placement; explicit altitude datum; content/media; visibility; separate release schedule and trajectory clock; geodesic trajectory interpolation; indoor-local/WGS84 conversion; legacy-work migration.
+- Added `tests/moment-model.test.cjs`: 10 tests. Executed in a Node 22 Vercel sandbox; 10 passed, 0 failed.
+- Added `docs/spatial-camera/FEATURE_RECOVERY_MATRIX.md` to distinguish recovered, modeled, integrated and verified capabilities.
+- The model is not yet connected to the camera-first UI, map, XR renderer or server registry. No deployment has been created.
 Current task: restore the advanced spatial capabilities into the user's approved camera-first Monument shell.
 
 ## Do not make the user repeat these decisions
