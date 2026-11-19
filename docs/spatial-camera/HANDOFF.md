@@ -85,3 +85,21 @@ Corrective work:
 - Corrective source commit: `4b9f572b0cd3d6502d0589cd0d4503b4df406a9e`.
 
 This is a source/markup repair and a successful Vercel build, not yet a physical-device runtime verification. Next time continue from this corrected commit and this preview, not from the previous broken deployment. Before deploying any UI change, validate document structure, required control IDs, mobile viewport layout, and camera/footer stacking.
+
+
+## 2026-11-19: actual root cause of invisible navigation found and fixed (no deployment)
+The user's repeated report that only the camera appeared was caused by a DOM hierarchy error, not camera permissions:
+- The opening `.stage` container was never closed after `#mapPanel`.
+- Consequently `#editor` and `footer.bottom` were children of `.stage`.
+- `.stage` is a flex item with `overflow:hidden`; the footer was laid out inside the clipped stage region and disappeared below its visible area.
+- The prior fix only repaired the inner editor markup and checked JavaScript syntax/IDs. It did not validate DOM parentage. That test gap caused repeated bad handoffs.
+
+Fix committed to `spatial-camera-mvp`:
+- Commit: `8ce4f6893306a6f874f08c19f2558907a9fe68fe`
+- Close `.stage` immediately after `#mapPanel`.
+- Make `.shell` position:relative so the Create sheet remains anchored to the app shell.
+- `#editor` and `footer.bottom` are now siblings of `.stage`, not descendants.
+- Structural HTML stack validation: PASS (no mismatched or unclosed tags).
+- Confirmed footer/editor outside stage, all four nav button IDs present, all editor/action IDs present.
+- No new Vercel deployment was created for this fix. The last READY deployment still contains the broken markup. Do not send that old preview as the corrected version.
+- Next step: perform an actual browser/mobile viewport test (or an equivalent headless DOM test) before any deployment. Only after it passes, create one preview deployment and hand over that one link.
