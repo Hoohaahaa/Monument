@@ -57,11 +57,46 @@ function computeAnchor(view){
  const w=Math.max(.1,Number(record.width_m)||3),h=Math.max(.1,Number(record.height_m)||4);
  const distance=Math.max(2.8,Math.min(12,Math.max(w*1.15,h*.85)));
  const yOffset=sky?Math.max(2.5,Math.min(10000,Number(record.altitude_m)||4)):0;
- anchor=Object.freeze({center:[p.x+forward[0]*distance,p.y+yOffset,p.z+forward[2]*distance],forward,right,up,w,h,sky:horizontalSky,facing:record.facing||'both',frameEnabled:record.frameEnabled!==false,placedAt:performance.now()});
+ anchor=Object.freeze({center:[p.x+forward[0]*distance,p.y+yOffset,p.z+forward[2]*distance],forward,right,up,w,h,kind:record.kind||'surface',sky:horizontalSky,facing:record.facing||'both',frameEnabled:record.frameEnabled!==false,placedAt:performance.now()});
  status('PLACED IN SESSION LOCAL SPACE · TRACKING MAY DRIFT');
 }
 function vertices(){
  const a=anchor,w=a.w/2,h=a.h/2;
+ // Geometry-specific meshes: columns are true vertical cylinders; points are
+ // pin markers with a spherical head and narrow stem, not rectangular panels.
+ if(a.kind==='column'||a.kind==='point'){
+  const out=[],segments=24;
+  const push=(v,u,q)=>out.push(...v,u,q);
+  const center=a.center, right=a.right, forward=a.forward;
+  const point=(x,y,z)=>[center[0]+right[0]*x+forward[0]*z,center[1]+y,center[2]+right[2]*x+forward[2]*z];
+  const cylinder=(radius,y0,y1)=>{
+   for(let i=0;i<segments;i++){
+    const t0=i/segments*Math.PI*2,t1=(i+1)/segments*Math.PI*2;
+    const p0=point(Math.cos(t0)*radius,y0,Math.sin(t0)*radius),p1=point(Math.cos(t1)*radius,y0,Math.sin(t1)*radius);
+    const q0=point(Math.cos(t0)*radius,y1,Math.sin(t0)*radius),q1=point(Math.cos(t1)*radius,y1,Math.sin(t1)*radius);
+    const u0=i/segments,u1=(i+1)/segments;
+    push(p0,u0,0);push(p1,u1,0);push(q0,u0,1);push(q0,u0,1);push(p1,u1,0);push(q1,u1,1);
+    const top=point(0,y1,0),bottom=point(0,y0,0);
+    push(top,.5,.5);push(q0,u0,1);push(q1,u1,1);
+    push(bottom,.5,.5);push(p1,u1,0);push(p0,u0,0);
+   }
+  };
+  if(a.kind==='column'){cylinder(w/2,0,h);return new Float32Array(out)}
+  // Point: a compact 3-D pin, with a tapered stem and a rounded head.
+  const stem=Math.max(.025,w*.055),head=Math.max(.09,w*.22),stemTop=h*.72;
+  cylinder(stem,0,stemTop);
+  const rings=8,slices=16;
+  for(let r=0;r<rings;r++){
+   const v0=r/rings,v1=(r+1)/rings,phi0=v0*Math.PI,phi1=v1*Math.PI;
+   for(let s=0;s<slices;s++){
+    const u0=s/slices,u1=(s+1)/slices,t0=u0*Math.PI*2,t1=u1*Math.PI*2;
+    const sph=(phi,t)=>point(Math.sin(phi)*Math.cos(t)*head,stemTop+head+Math.cos(phi)*head,Math.sin(phi)*Math.sin(t)*head);
+    const a0=sph(phi0,t0),b0=sph(phi0,t1),a1=sph(phi1,t0),b1=sph(phi1,t1);
+    push(a0,u0,v0);push(b0,u1,v0);push(a1,u0,v1);push(a1,u0,v1);push(b0,u1,v0);push(b1,u1,v1);
+   }
+  }
+  return new Float32Array(out);
+ }
  const point=(x,y)=>{
   if(a.sky)return [a.center[0]+a.right[0]*x+a.up[0]*y,a.center[1],a.center[2]+a.right[2]*x+a.up[2]*y];
   return [a.center[0]+a.right[0]*x,a.center[1]+y,a.center[2]+a.right[2]*x];
@@ -85,7 +120,7 @@ function vertices(){
  for(const face of faces)for(const [v,u,q] of face)push(v,u,q);
  return new Float32Array(out);
 }
-function draw(t,frame){if(!session)return;session.requestAnimationFrame(draw);try{frameCount++;const pose=frame.getViewerPose(refSpace);if(!pose){if(t-lastStatus>2500){lastStatus=t;status('WAITING FOR TRACKING · MOVE PHONE SLOWLY')}return;}poseCount++;gl.bindFramebuffer(gl.FRAMEBUFFER,layer.framebuffer);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);if(!anchor)computeAnchor(pose.views[0]);if(!anchor)return;if(lastText!==arMessage())updateTexture();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);gl.bufferData(gl.ARRAY_BUFFER,vertices(),gl.STATIC_DRAW);gl.vertexAttribPointer(gl.getAttribLocation(program,'position'),3,gl.FLOAT,false,20,0);gl.vertexAttribPointer(gl.getAttribLocation(program,'uvIn'),2,gl.FLOAT,false,20,12);gl.uniform1f(gl.getUniformLocation(program,'time'),t*.001);gl.uniform1f(gl.getUniformLocation(program,'lum'),.28);gl.uniform1f(gl.getUniformLocation(program,'frameEnabled'),anchor.frameEnabled?1:0);for(const view of pose.views){const vp=layer.getViewport(view);gl.viewport(vp.x,vp.y,vp.width,vp.height);gl.uniformMatrix4fv(gl.getUniformLocation(program,'matrix'),false,product(view.projectionMatrix,view.transform.inverse.matrix));gl.drawArrays(gl.TRIANGLES,0,12)}if(t-lastStatus>4000){lastStatus=t;status('TRACKING '+poseCount+'/'+frameCount+' · LOCAL SPACE · TRACKING CAN DRIFT · NO OCCLUSION')}}catch(e){status('XR RENDER ERROR: '+e.message);console.error(e)}}
+function draw(t,frame){if(!session)return;session.requestAnimationFrame(draw);try{frameCount++;const pose=frame.getViewerPose(refSpace);if(!pose){if(t-lastStatus>2500){lastStatus=t;status('WAITING FOR TRACKING · MOVE PHONE SLOWLY')}return;}poseCount++;gl.bindFramebuffer(gl.FRAMEBUFFER,layer.framebuffer);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);if(!anchor)computeAnchor(pose.views[0]);if(!anchor)return;if(lastText!==arMessage())updateTexture();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);const mesh=vertices();gl.bufferData(gl.ARRAY_BUFFER,mesh,gl.STATIC_DRAW);gl.vertexAttribPointer(gl.getAttribLocation(program,'position'),3,gl.FLOAT,false,20,0);gl.vertexAttribPointer(gl.getAttribLocation(program,'uvIn'),2,gl.FLOAT,false,20,12);gl.uniform1f(gl.getUniformLocation(program,'time'),t*.001);gl.uniform1f(gl.getUniformLocation(program,'lum'),.28);gl.uniform1f(gl.getUniformLocation(program,'frameEnabled'),anchor.frameEnabled?1:0);for(const view of pose.views){const vp=layer.getViewport(view);gl.viewport(vp.x,vp.y,vp.width,vp.height);gl.uniformMatrix4fv(gl.getUniformLocation(program,'matrix'),false,product(view.projectionMatrix,view.transform.inverse.matrix));gl.drawArrays(gl.TRIANGLES,0,mesh.length/5)}if(t-lastStatus>4000){lastStatus=t;status('TRACKING '+poseCount+'/'+frameCount+' · LOCAL SPACE · TRACKING CAN DRIFT · NO OCCLUSION')}}catch(e){status('XR RENDER ERROR: '+e.message);console.error(e)}}
 function cleanup(){session=null;anchor=null;initialAnchor=null;gl=null;program=null;texture=null;document.body.classList.remove('xr-active');$('xrHud').hidden=true}
 async function startXR(work){const c=document.createElement('canvas');gl=c.getContext('webgl',{alpha:true,antialias:true,xrCompatible:true});if(!gl)throw Error('WebGL not supported');session=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['local'],optionalFeatures:['dom-overlay'],domOverlay:{root:$('xrHud')}});session.addEventListener('end',cleanup);await gl.makeXRCompatible();layer=new XRWebGLLayer(session,gl);await session.updateRenderState({baseLayer:layer,depthNear:0.01,depthFar:1000});refSpace=await session.requestReferenceSpace('local');record=work;anchor=null;initialAnchor=null;frameCount=0;poseCount=0;lastText=null;setTextureImage(work.imageUrl||'');configureGL();document.body.classList.add('xr-active');$('xrHud').hidden=false;$('xrMessage').value=arMessage();session.requestAnimationFrame(draw)}
 async function fallback(work){record=work;const el=$('cameraLayer');el.hidden=false;$('cameraSurface').hidden=true;status('LIVE CAMERA ONLY · WORLD-LOCKED AR IS NOT AVAILABLE ON THIS DEVICE');try{if(window.MONUMENT_CAMERA_STREAM){$('cameraVideo').srcObject=window.MONUMENT_CAMERA_STREAM;await $('cameraVideo').play()}else if(navigator.mediaDevices?.getUserMedia){camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});$('cameraVideo').srcObject=camStream;await $('cameraVideo').play()}}catch(e){status('CAMERA UNAVAILABLE · CLOSE THIS VIEW AND CHECK PERMISSIONS');}}
