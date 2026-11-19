@@ -103,3 +103,17 @@ Fix committed to `spatial-camera-mvp`:
 - Confirmed footer/editor outside stage, all four nav button IDs present, all editor/action IDs present.
 - No new Vercel deployment was created for this fix. The last READY deployment still contains the broken markup. Do not send that old preview as the corrected version.
 - Next step: perform an actual browser/mobile viewport test (or an equivalent headless DOM test) before any deployment. Only after it passes, create one preview deployment and hand over that one link.
+
+
+## 2026-11-19 continuation: pre-deployment QA and corrective fixes
+Latest source commit: `9bf6d31b4d7fddf18131602b4c6c05ce1cdabb1f`.
+Additional fixes since the navigation DOM repair:
+- Place now recenters and zooms to a restored location.
+- Manual map selection, GPS selection and marker drag update the 100m/200m test baseline.
+- Camera button is rebound after wrapping startup; orientation permission is requested directly from the Camera gesture before awaiting getUserMedia.
+- Surface apparent width is reduced by the cosine of incidence angle, so the surface narrows when viewed edge-on.
+- Leaflet missing dependency now produces a visible status instead of an uncaught ReferenceError.
+
+A deterministic mocked-browser interaction run exercised nav, sheet, map, map tap, geometry, map footprint, Global/range, local save/restore, map restore centering, 100m/200m/reset, publish hash, clipboard, GPS selection/watch and camera stream startup. Persian URL-hash serialization/deserialization was independently round-trip tested. Embedded JS syntax, HTML tag balance, IDs and script references were checked. See `docs/spatial-camera/QA_REPORT.md`.
+
+Important: this is not a real Chromium/WebKit or physical-device test. Do not claim CSS rendering, OSM tile network delivery, Android/iOS permission prompts, compass hardware, or AR world-lock have passed. No new Vercel deployment has been created. Do not deploy until the single mobile browser QA gate in QA_REPORT.md can be completed or explicitly disclose that limitation to the user.
