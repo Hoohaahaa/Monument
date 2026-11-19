@@ -9,6 +9,10 @@ Last updated: 2026-11-19
 - Fixed the persistent **Publish** action: it now opens the release-review sheet and asks the user to confirm with the in-sheet Publish control; it no longer calls publish immediately while opening the editor.
 - Added a content gate: a Moment with no text, image or audio cannot create a visitor link even if its spatial model validates.
 - Added `tests/app-shell-contract.test.cjs` to guard these entry-point behaviors.
+- Removed the draggable screen-fixed rectangle from the non-WebXR fallback. When WebXR is unavailable, the fallback now shows the live camera only and explicitly says world-locked AR is unavailable; it no longer presents a movable screen overlay as spatial content.
+- Added `tests/xr-fallback-contract.test.cjs` to prevent reintroducing that misleading fallback.
+- This improves honesty and interaction safety, but does not make geographic AR available on unsupported devices. A real persistent geospatial anchor still requires a supported geospatial AR/VPS implementation and device testing.
+
 - These are source-level fixes only so far. They have not yet been deployed or verified in a real mobile browser. WebXR remains session-local and is not geographically aligned; server publishing, persistent anchors, and Point/Column/Trajectory XR rendering remain incomplete.
 
 ## New integration work completed
