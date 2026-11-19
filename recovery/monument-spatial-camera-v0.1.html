@@ -26,19 +26,27 @@
 </style></head><body><div class="shell"><header class="top"><div class="logo" aria-label="Monument">◇♧♡■■■■■</div><div class="state" id="state">FIELD EXPERIENCE / 001</div></header>
 <div class="stage"><section class="camera" id="camera"><video id="video" autoplay playsinline muted></video><div class="cam-placeholder" id="placeholder"><div class="lens">◎</div><h1>See this place<br>through Monument.</h1><p>Open your camera, create a spatial note, and leave it here for someone else to discover.</p><button class="primary" id="openCamera">Open Camera ↗</button></div><div class="camera-hud" id="hud"><div class="reticle"></div><div class="moment-card"><div class="eyebrow">MONUMENT / SPATIAL MOMENT</div><h2 id="previewTitle">A thought, left here.</h2><p id="previewBody">Your text will appear in this space.</p><small id="previewMeta">LOCATION NOT SET · CHOOSE A PLACE</small></div></div></section><div class="spatial-guidance" id="guidance"><strong id="guidanceMain">Waiting for location and compass…</strong><span class="sub" id="guidanceSub">Approximate GPS + compass projection · not world-locked AR</span></div>
 <section class="map-panel" id="mapPanel"><div id="map"></div><div class="map-help">Tap anywhere to place the Moment. Drag the pin to fine-tune its position.</div><div class="map-tools"><button class="fab" id="gps" title="Find my location">◎</button><button class="fab" id="zoomIn">＋</button><button class="fab" id="zoomOut">−</button></div></section>
-<div class="sheet" id="editor"><div class="sheet-head"><div><div class="eyebrow">CREATE / PUBLISH</div><h3>Your spatial Moment</h3></div><button class="close" id="closeEditor">Done</button></div><div class="field"><label>TITLE</label><input id="title" maxlength="80" placeholder="A note from this mountain"></div><div class="field"><label>TEXT</label><textarea id="body" maxlength="1200" placeholder="Write something worth leaving here…"></textarea></div>
+<div class="sheet" id="editor">
+<div class="sheet-head"><div><div class="eyebrow">CREATE / PUBLISH</div><h3>Your spatial Moment</h3></div><button class="close" id="closeEditor" type="button">Done</button></div>
+<div class="field"><label for="title">TITLE</label><input id="title" maxlength="80" placeholder="A note from this mountain"></div>
+<div class="field"><label for="body">TEXT</label><textarea id="body" maxlength="1200" placeholder="Write something worth leaving here…"></textarea></div>
 <div class="geometry-panel">
 <div class="eyebrow">SURFACE GEOMETRY</div>
 <div class="geometry-grid">
-<div class="field"><label>WIDTH · METERS</label><input id="surfaceWidth" type="number" min="1" max="100000" step="1" value="12"></div>
-<div class="field"><label>HEIGHT · METERS</label><input id="surfaceHeight" type="number" min="1" max="100000" step="1" value="4"></div>
+<div class="field"><label for="surfaceWidth">WIDTH · METERS</label><input id="surfaceWidth" type="number" min="1" max="100000" step="1" value="12"></div>
+<div class="field"><label for="surfaceHeight">HEIGHT · METERS</label><input id="surfaceHeight" type="number" min="1" max="100000" step="1" value="4"></div>
 </div>
-<div class="field"><div class="sliderrow"><label>ORIENTATION / HEADING</label><b id="surfaceHeadingLabel">000°</b></div><input id="surfaceHeading" type="range" min="0" max="359" value="0"></div>
-<div class="geometry-note" id="geometryReadout">12 m wide × 4 m high · vertical surface</div>
+<div class="field"><div class="sliderrow"><label for="surfaceHeading">ORIENTATION / HEADING</label><b id="surfaceHeadingLabel">000°</b></div><input id="surfaceHeading" type="range" min="0" max="359" value="0"></div>
+<div class="geometry-note" id="geometryReadout">12 m wide × 4 m high · heading 000°</div>
 </div>
-<div class="field"><div class="sliderrow"><label>VISIBILITY / RANGE</label><b id="radiusLabel">250 m</b></div><input id="radius" type="range" min="50" max="100000" step="50" value="250"><label class="global-toggle"><input id="globalVisibility" type="checkbox"> Global visibility</label></div>
-<div class="field"><div class="eyebrow">MAP FOOTPRINT</div><div class="geometry-note">The map shows the surface width and facing direction. Height is vertical and is shown in the camera projection.</div></div>
-<div class="field"><label>SPATIAL TEST / MOVE MOMENT EAST</label><b id="radiusLabel">250 m</b></div><input id="radius" type="range" min="50" max="500" step="25" value="250"></div><div class="field"><label>SPATIAL TEST / MOVE MOMENT EAST</label><div class="test-actions"><button class="secondary" id="shift100" type="button">Move +100 m</button><button class="secondary" id="shift200" type="button">Move +200 m</button></div><button class="secondary" id="resetShift" type="button" style="width:100%;margin-top:7px">Reset test position</button></div><div class="status" id="status">Set a location using GPS or the map.</div><div class="sensor-line" id="sensorStatus">Sensors: not started</div><button class="secondary" id="saveLocal" type="button" style="width:100%;margin-top:8px">Save on this device</button><button class="primary" id="publish" style="width:100%;margin-top:10px">Publish Moment ↗</button><button class="share" id="share">Copy share link</button></div></div>
+<div class="field"><div class="sliderrow"><label for="radius">VISIBILITY / RANGE</label><b id="radiusLabel">250 m</b></div><input id="radius" type="range" min="50" max="100000" step="50" value="250"><label class="global-toggle"><input id="globalVisibility" type="checkbox"> Global visibility</label></div>
+<div class="field"><label>SPATIAL TEST / MOVE MOMENT EAST</label><div class="test-actions"><button class="secondary" id="shift100" type="button">Move +100 m</button><button class="secondary" id="shift200" type="button">Move +200 m</button></div><button class="secondary" id="resetShift" type="button" style="width:100%;margin-top:7px">Reset test position</button></div>
+<div class="status" id="status">Set a location using GPS or the map.</div>
+<div class="sensor-line" id="sensorStatus">Sensors: not started</div>
+<button class="secondary" id="saveLocal" type="button" style="width:100%;margin-top:8px">Save on this device</button>
+<button class="primary" id="publish" type="button" style="width:100%;margin-top:10px">Publish Moment ↗</button>
+<button class="share" id="share" type="button">Copy share link</button>
+</div>
 <footer class="bottom"><button class="tab active" id="cameraTab">◉ Camera</button><button class="tab" id="mapTab">⌖ Place</button><button class="tab" id="editTab">＋ Create</button><button class="publish" id="publishQuick">Publish</button></footer></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
 const $=id=>document.getElementById(id);let stream=null,point=null,marker=null,circle=null,surfaceEdge=null,surfaceAxis=null,mapReady=false,map=null,viewOnly=false,front=false;
