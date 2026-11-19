@@ -25,11 +25,11 @@ test('indoor coordinates require a named venue and local origin, not GPS pretend
 });
 
 test('column dimensions and framed-surface dimensions have separate validation',()=>{
- const column=M.defaultMoment({form:'column',geometry:{diameter:1.2,height:14}});
+ const column=M.defaultMoment({form:'column',placement:{mode:'outdoor',anchor:{lat:27.95,lon:-82.46,altitude:0,altitudeDatum:'MSL'}},geometry:{diameter:1.2,height:14}});
  assert.equal(M.validateMoment(column).valid,true);
  column.geometry.diameter=0;
  assert.ok(M.validateMoment(column).errors.includes('diameter_out_of_range'));
- const panel=M.defaultMoment({form:'framed-surface',geometry:{width:40,height:12}});
+ const panel=M.defaultMoment({form:'framed-surface',placement:{mode:'outdoor',anchor:{lat:27.95,lon:-82.46,altitude:0,altitudeDatum:'MSL'}},geometry:{width:40,height:12}});
  assert.equal(M.validateMoment(panel).valid,true);
 });
 
