@@ -164,3 +164,11 @@ No speculative or repeated Vercel deployments. A branch or commit is not a verif
 - The contract explicitly rejects a WebXR session-local provider claiming persistent anchors, and does not treat segmentation-only masks as reliable metric depth.
 - Added contract tests and loaded the module in the web shell. Tests have not yet been executed in this environment.
 - Created issue #12 for persistent geospatial anchors/native runtimes and issue #13 for real-world depth, scene understanding and occlusion.
+
+
+## Targeted verification after trajectory and runtime-contract work
+
+- JavaScript parse checks passed for `moment-model.js`, `spatial-runtime-contract.js`, `xr-adapter.js`, `xr-v18.js`, `qr-scanner.js`, and `app.js` using an isolated V8 compile check.
+- Executed the focused Moment-model, XR-adapter, XR-renderer-contract and spatial-runtime-contract test cases in an isolated test harness: **29 passed, 0 failed**.
+- This is not a full `npm test` run and not a physical-device/browser E2E run. GitHub returned no workflow runs or commit status checks for the latest push, so CI is still unconfirmed.
+- Network/DNS prevented cloning the repository into the local QA container. No Vercel deployment was created and no production alias was changed.
