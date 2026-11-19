@@ -68,7 +68,7 @@ See [OCCLUSION_RENDERING_SPEC.md](./OCCLUSION_RENDERING_SPEC.md) for the full re
 ### Distant terrain and buildings
 For a virtual work behind a hill, mountain or distant building, phone LiDAR is not enough. Use georeferenced terrain elevation models and 3D building/landscape meshes, then compare the ray from the localized camera to the work against the world geometry. Accuracy depends on source resolution, datum, update date, vegetation/building coverage and localization error.
 
-The runtime needs a common vertical datum and explicit conversions. Never silently mix ellipsoid altitude, mean sea level, terrain-relative height and venue-local height.
+The runtime needs a common vertical datum and explicit conversions. Never silently mix ellipsoid altitude, mean sea level, terrain-relative height and venue-local height. `engine/vertical-datum-contract.js` now provides a strict conversion boundary: ellipsoid↔MSL requires geoid separation, AGL↔MSL requires terrain elevation, and venue-local↔MSL requires a surveyed venue-origin altitude. Missing references cause a validation failure; the module does not invent geoid or terrain data.
 
 ### Sky and clouds
 Sky segmentation can identify sky pixels in the current camera view, but it does not determine the depth or volumetric shape of an individual cloud. Treat cloud occlusion as a separate advanced feature:
@@ -103,7 +103,7 @@ The canonical Moment should retain provider-neutral content and geometry. Provid
 - No claim of true-north alignment, VPS persistence or environmental occlusion.
 
 ### Stage 1 — Geospatial foundation
-- Define coordinate-frame and altitude-datum contract.
+- Define coordinate-frame and altitude-datum contract. A first strict altitude conversion module is now in the branch; geoid/terrain/venue reference data and survey validation remain external requirements.
 - Add anchor-provider abstraction and localization quality fields.
 - Prototype Android ARCore Geospatial anchors in one known VPS-covered location.
 - Test restart/relocalization, heading error, vertical error, drift and coverage loss.
