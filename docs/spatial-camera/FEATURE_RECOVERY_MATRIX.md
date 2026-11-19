@@ -54,3 +54,11 @@ This matrix separates source-confirmed functionality from the current integratio
 
 - Non-WebXR fallback was changed from a draggable screen overlay to camera-only status; no screen-fixed element is now presented as spatial AR.
 - Regression tests: `tests/xr-fallback-contract.test.cjs`.
+
+## Release gates and tracked follow-up
+
+- Latest automated verification: 34 unit/contract tests pass; app.js and xr-v18.js syntax checks pass.
+- Mobile browser E2E is not verified because the current QA sandbox cannot install a supported Chromium build. Tracked in [issue #9](https://github.com/Hoohaahaa/Monument/issues/9).
+- Geometry-specific Point/Column rendering and actual timed trajectory playback remain open in [issue #10](https://github.com/Hoohaahaa/Monument/issues/10).
+- Durable server publication, stable URLs and revision history remain open in [issue #11](https://github.com/Hoohaahaa/Monument/issues/11).
+- No new deployment was created from this pass; the previous preview does not contain these source fixes.
