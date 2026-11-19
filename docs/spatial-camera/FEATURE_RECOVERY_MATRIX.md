@@ -51,3 +51,6 @@ This matrix separates source-confirmed functionality from the current integratio
 - Publishing now requires at least one non-empty text, image URL or audio URL, in addition to model validation and a non-private audience.
 - Regression coverage added in `tests/app-shell-contract.test.cjs`.
 - Status: committed to the working branch; runtime/mobile browser verification and a new preview are still pending.
+
+- Non-WebXR fallback was changed from a draggable screen overlay to camera-only status; no screen-fixed element is now presented as spatial AR.
+- Regression tests: `tests/xr-fallback-contract.test.cjs`.
