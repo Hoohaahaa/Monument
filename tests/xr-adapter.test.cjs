@@ -23,11 +23,11 @@ test('sky surface passes its elevation separately from public visibility timing'
  assert.equal(result.record.body,'Look up');
 });
 
-test('point, column, trajectory and media-only work are not falsely advertised as supported by this renderer',()=>{
+test('point, column and trajectory are not falsely advertised; image-only surfaces are supported',()=>{
  for(const form of ['point','column','trajectory']){
   const result=XR.toXRRecord(M.defaultMoment({form}));
   assert.equal(result.supported,false);
  }
- const imageOnly=M.defaultMoment({form:'framed-surface',content:{type:'image',text:'',imageUrl:'https://example.com/image.jpg'}});
- assert.equal(XR.toXRRecord(imageOnly).supported,false);
+ const imageOnly=M.defaultMoment({form:'framed-surface',content:{type:'image',text:'',imageUrl:'https://example.com/image.jpg',altText:'A mountain'}});
+ const result=XR.toXRRecord(imageOnly);assert.equal(result.supported,true);assert.equal(result.record.imageUrl,'https://example.com/image.jpg');assert.equal(result.record.body,'A mountain');
 });
