@@ -9,7 +9,7 @@ const val=id=>$(id)?.value??'';
 const num=(id,d=0)=>{const raw=val(id);if(raw==='')return d;const n=Number(raw);return Number.isFinite(n)?n:d};
 function field(id,label,type,v,attrs){return '<div class="field"><label for="'+id+'">'+label+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+(v??'')+'" '+(attrs||'')+'></div>'}
 function select(id,label,items,v){return '<div class="field"><label for="'+id+'">'+label+'</label><select id="'+id+'">'+items.map(x=>'<option value="'+x[0]+'" '+(x[0]===v?'selected':'')+'>'+x[1]+'</option>').join('')+'</select></div>'}
-function status(s){$('status').textContent=s}
+function status(s){if($('status'))$('status').textContent=s;if($('state'))$('state').textContent=String(s).slice(0,48)}
 function sheet(open){$('editor').classList.toggle('open',open)}
 function anchor(){
  const lift=moment.form==='sky-surface'?Number(moment.sky.elevation||0):0;
