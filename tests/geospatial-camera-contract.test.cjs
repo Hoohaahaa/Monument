@@ -9,7 +9,7 @@ const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const geo = fs.readFileSync(path.join(root, 'engine', 'geospatial-camera.js'), 'utf8');
 
 test('geospatial camera module loads before the app entry point', () => {
-  assert.match(html, /engine\/geospatial-camera\.js'><\/script>[\s\S]*app\.js'><\/script>/);
+  assert.match(html, /engine\/geospatial-camera\.js"><\/script>[\s\S]*app\.js"><\/script>/);
   assert.match(html, /id="geoCanvas"/);
   assert.match(html, /id="geoStatus"/);
 });
