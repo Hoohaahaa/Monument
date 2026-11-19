@@ -170,7 +170,7 @@ function updateTrajectoryAnchor(now){
  anchor={...anchor,center:[c[0]+anchor.right[0]*x+anchor.forward[0]*z,c[1]+y,c[2]+anchor.right[2]*x+anchor.forward[2]*z]};
  if(sample.reason==='not_started')status('TRAJECTORY SCHEDULED · WAITING FOR START TIME');
  else if(sample.reason==='completed'&&!trajectoryCompleted){trajectoryCompleted=true;status('TRAJECTORY COMPLETE · FINAL POSITION HELD')}
- else if(!paused&&now-lastStatus>2500){lastStatus=now;status('TRAJECTORY '+Math.round(sample.progress*100)+'% · SESSION-LOCAL AXES · NOT NORTH-ALIGNED')}
+ else if(sample.reason!=='completed'&&!paused&&now-lastStatus>2500){lastStatus=now;status('TRAJECTORY '+Math.round(sample.progress*100)+'% · SESSION-LOCAL AXES · NOT NORTH-ALIGNED')}
 }
 function pauseTrajectory(){
  if(!anchor?.trajectory||paused)return false;
