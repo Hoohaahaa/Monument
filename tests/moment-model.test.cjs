@@ -99,3 +99,23 @@ test('trajectory timing is not inferred from ordinary publication start/end fiel
  assert.equal(m.motion.kind,'static');
  assert.equal(m.visibility.startsAt,'2026-01-01T00:00:00Z');
 });
+
+
+test('legacy venue work preserves menu, attribution and AR mode metadata',()=>{
+ const m=M.migrateLegacyWork({kind:'venue',title:'Gallery',place:'Museum',room:'East wing',contentType:'artwork',artist:'Artist',materials:'Stone',provenance:'Collection 12',sourceLabel:'Museum archive',sourceUrl:'https://example.com/source',menu:[{name:'Tea',price:'5',ingredients:'Tea leaves',allergens:'None'}],arMode:'qr',qrPayload:'https://example.com/marker/7',qrSize:.2,origin:{lat:27.95,lon:-82.46,altitude:4},localAnchor:{x:1,y:2,z:3}});
+ assert.equal(m.experienceKind,'venue');
+ assert.equal(m.content.contentType,'artwork');
+ assert.equal(m.content.artist,'Artist');
+ assert.equal(m.content.provenance,'Collection 12');
+ assert.equal(m.content.menu[0].name,'Tea');
+ assert.equal(m.placement.indoor.arMode,'qr');
+ assert.equal(m.placement.indoor.qr.payload,'https://example.com/marker/7');
+ assert.equal(M.validateMoment(m).valid,true);
+});
+
+test('indoor QR reference requires payload and a physical marker size',()=>{
+ const m=M.defaultMoment({placement:{mode:'indoor',indoor:{venueName:'Gallery',origin:{lat:27.95,lon:-82.46,altitude:4},anchor:{x:0,y:0,z:0},surface:'wall',arMode:'qr',qr:{payload:'https://example.com/qr',physicalSizeM:.15}}}});
+ assert.equal(M.validateMoment(m).valid,true);
+ m.placement.indoor.qr.payload='';
+ assert.ok(M.validateMoment(m).errors.includes('indoor_qr_anchor_invalid'));
+});
