@@ -146,3 +146,12 @@ No speculative or repeated Vercel deployments. A branch or commit is not a verif
 
 - Added `.github/workflows/monument-tests.yml` to run `npm test` and Node syntax checks on pushes to this working branch and relevant pull requests.
 - GitHub currently returns no commit status checks for the workflow commit. Treat CI as configured but **not yet confirmed running or passing**.
+
+
+## 2026-11-19 timed trajectory XR implementation
+
+- XR adapter now accepts a trajectory only when it has a valid start time, positive duration and at least two waypoints. It passes the waypoints, interpolation mode and loop setting to the renderer.
+- The renderer samples the trajectory clock on XR frames, interpolates between waypoint positions, supports looping, holds the final point after completion, and exposes Pause/Resume controls that preserve elapsed playback time.
+- Indoor waypoints are interpolated in venue-local XYZ. Outdoor WGS84 waypoints are converted to a local tangent approximation and mapped into the current session's camera-relative horizontal basis.
+- **Important limitation:** outdoor trajectory playback is not true-north aligned, not VPS/geospatial anchored and not persistent between sessions. The renderer reports the local-axis limitation; it must not be interpreted as geographic AR accuracy.
+- Adapter and renderer contract tests were added/updated. Execution and browser verification are pending; the current environment has not provided a passing CI result for this batch. No preview or production deployment was created.
