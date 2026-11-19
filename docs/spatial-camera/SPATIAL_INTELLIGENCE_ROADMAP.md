@@ -16,6 +16,14 @@ The product must distinguish:
 
 A map pin is not a precise AR anchor. A session-local WebXR pose is not a persistent geographic anchor. A terrain elevation model is not a live 3D reconstruction. A segmentation mask is not a metrically accurate depth map.
 
+## Product quality target: believable physical-world presence
+
+The long-term target is not a virtual card drawn over a camera feed. A Monument work should appear to occupy the captured physical scene: nearby people, trees, walls and other real surfaces should cover the virtual work when they are closer to the camera. The effect should remain stable as the viewer moves, with correct scale, pose, depth ordering and camera alignment.
+
+This is a product target, not a current capability claim. The detailed acceptance criteria, quality tiers, depth registration, real-vs-virtual depth pass, temporal stabilization, edge handling and lighting roadmap are specified in [OCCLUSION_RENDERING_SPEC.md](./OCCLUSION_RENDERING_SPEC.md).
+
+High-fidelity rendering requires both correct world localization and reliable scene depth. Neither can compensate for the absence of the other. The renderer must lower its quality tier when depth is stale, unregistered, incomplete or low-confidence; it must never fake metric depth from semantic labels.
+
 ## Recommended runtime split
 
 ### Web application
@@ -44,14 +52,18 @@ For close objects such as people, trees, walls, furniture and vehicles:
 2. Reconstruct a local mesh or depth surface.
 3. Optionally classify pixels/mesh faces (person, vegetation, building, ground, sky, etc.).
 4. Transform depth/mesh into the current camera coordinate frame.
-5. Render the virtual scene with a depth test so nearer real surfaces occlude virtual pixels.
-6. Track confidence, age and coverage. Avoid hard occlusion where depth is missing or unreliable.
+5. Register the depth to the RGB camera using calibrated intrinsics/extrinsics and aligned timestamps.
+6. Render the virtual scene with a real-scene depth pass/depth test so nearer real surfaces occlude virtual fragments.
+7. Stabilize depth over time without smearing foreground/background edges.
+8. Track confidence, age and coverage. Avoid hard occlusion where depth is missing or unreliable.
 
 Fallback hierarchy:
-- High confidence: device depth / LiDAR mesh.
-- Medium confidence: platform scene mesh or supported depth estimate.
-- Low confidence: semantic segmentation only; use soft/partial masking and do not invent metric depth.
+- High confidence: registered device depth / LiDAR mesh.
+- Medium confidence: supported platform scene mesh or depth estimate with measured confidence.
+- Low confidence: semantic segmentation only; use conservative approximate masking and do not invent metric depth.
 - Unsupported: render without environmental occlusion and tell the user.
+
+See [OCCLUSION_RENDERING_SPEC.md](./OCCLUSION_RENDERING_SPEC.md) for the full rendering pipeline and quality tiers.
 
 ### Distant terrain and buildings
 For a virtual work behind a hill, mountain or distant building, phone LiDAR is not enough. Use georeferenced terrain elevation models and 3D building/landscape meshes, then compare the ray from the localized camera to the work against the world geometry. Accuracy depends on source resolution, datum, update date, vegetation/building coverage and localization error.
@@ -74,7 +86,9 @@ Every runtime adapter should report:
 - altitude datum;
 - pose timestamp and tracking state;
 - depth/mesh source, timestamp, confidence and coverage;
+- depth units, registration state, camera frame identity and relevant calibration metadata;
 - supported occlusion classes;
+- selected rendering tier and explicit fallback reason;
 - capability flags and explicit fallback reason.
 
 The canonical Moment should retain provider-neutral content and geometry. Provider-specific IDs and runtime observations belong in separate anchor/localization records, not in the portable content body.
@@ -96,10 +110,11 @@ The canonical Moment should retain provider-neutral content and geometry. Provid
 - Keep WebXR as editor preview, not the geospatial source of truth.
 
 ### Stage 2 — Local environmental occlusion
-- Native ARKit/RealityKit and ARCore depth/scene understanding prototypes.
-- Depth-to-renderer pipeline and real-vs-virtual depth test.
-- Person and nearby rigid-object occlusion first; vegetation separately evaluated.
-- Device capability matrix, thermal/performance budgets and low-confidence fallback.
+- Finalize provider-neutral depth-frame and rendering-policy contract.
+- Prototype native ARKit/RealityKit and ARCore depth/scene understanding.
+- Implement registered depth-to-renderer pipeline and real-vs-virtual depth test.
+- Person and nearby rigid-object occlusion first; vegetation and thin structures separately evaluated.
+- Add temporal stabilization, confidence-aware edge treatment, device capability matrix, thermal/performance budgets and low-confidence fallback.
 
 ### Stage 3 — Regional world geometry
 - Ingest licensed terrain DEM and suitable 3D building/vegetation datasets.
@@ -107,10 +122,11 @@ The canonical Moment should retain provider-neutral content and geometry. Provid
 - Add ray/mesh visibility queries between camera and Moment.
 - Validate with surveyed viewpoints and known landmarks.
 
-### Stage 4 — Dynamic environment
+### Stage 4 — Dynamic environment and rendering integration
 - Sky segmentation and horizon understanding.
 - Evaluate weather/cloud data only for use cases with sufficient temporal and spatial resolution.
 - Consider multi-view/site scans for high-fidelity locations.
+- Evaluate exposure, lighting and contact-shadow integration only after depth and localization are stable.
 - Label approximations; no false claim of volumetric cloud reconstruction.
 
 ## Acceptance tests
@@ -118,7 +134,9 @@ The canonical Moment should retain provider-neutral content and geometry. Provid
 - A work remains at the same surveyed location after app restart and relocalization.
 - Device pose uncertainty is surfaced; loss of VPS does not silently jump the content.
 - A person/tree/wall closer than the virtual work correctly occludes it on supported devices.
-- Unsupported or low-confidence depth falls back predictably.
+- Occlusion depth is registered to the color camera and has valid units, timestamps and camera-frame identity.
+- Stale, sparse, unregistered or low-confidence depth falls back predictably.
+- Fine foliage, thin structures, fast motion and depth holes are included in device QA.
 - A distant terrain ridge blocks a virtual work only when the terrain data and coordinate frames justify it.
 - Trajectory motion clock is independent of publication visibility windows.
 - Altitude datum conversions are tested with known control points.
@@ -131,3 +149,4 @@ The canonical Moment should retain provider-neutral content and geometry. Provid
 - Terrain/building/vegetation data licensing and update cadence.
 - Whether user-contributed site scans are allowed, and their consent/retention/privacy policy.
 - Accuracy targets by experience tier (local, venue, city/landscape).
+- Reference devices and measurable occlusion quality/performance budgets.
