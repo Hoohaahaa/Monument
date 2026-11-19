@@ -69,3 +69,19 @@ Not yet done:
 3. If near-zero world lock is still required, implement a native/WebXR/ARCore/ARKit tracking adapter with anchored transforms; do not attempt to mask drift with CSS easing.
 4. Extend geometry to include vertical base altitude/elevation datum, terrain-following lower edge, roll/pitch calibration, surface image/media texture, and a proper global geospatial registry.
 5. Keep a NO OS-style decision log: every selected path, rejected alternative, reason, failed route and follow-up task should be recorded.
+
+
+## 2026-11-19 follow-up: navigation/editor regression
+The prior preview `dpl_AS72d4ndqrSGR2Jjv8pQjhZ2Gsc6` was not acceptable. While inserting the geometry controls, the editor markup retained a duplicate old radius/test section and unbalanced closing divs. This corrupted the document structure around the stage, editor and footer, causing the user-facing navigation/actions to disappear or become inaccessible. This was our implementation error; do not ask the user to fix it.
+
+Corrective work:
+- Rebuilt the complete `#editor` markup as one clean, balanced block.
+- Kept exactly one each of Camera, Place, Create, Publish, editor, geometry fields, test-shift actions and local save/publish controls.
+- Preserved the original camera-first shell and bottom navigation.
+- Re-ran embedded JavaScript syntax check: PASS.
+- Verified required control IDs each occur exactly once.
+- New preview deployment: https://monument-field-test-7oufklvpc-mos-projects-efbc27a5.vercel.app/
+- Deployment ID: `dpl_4qNi4Z5ksqLES45VxEaGEPqULw4W`, state READY.
+- Corrective source commit: `4b9f572b0cd3d6502d0589cd0d4503b4df406a9e`.
+
+This is a source/markup repair and a successful Vercel build, not yet a physical-device runtime verification. Next time continue from this corrected commit and this preview, not from the previous broken deployment. Before deploying any UI change, validate document structure, required control IDs, mobile viewport layout, and camera/footer stacking.
