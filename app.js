@@ -78,7 +78,7 @@ function simulateObserver(){
  const p=anchor();if(moment.placement.mode!=='outdoor'){box.textContent='Indoor geometry uses venue-local coordinates. Outdoor line-of-sight simulation is not applied.';return}
  if(!p||!Number.isFinite(observer.lat)||!Number.isFinite(observer.lon)||!window.Spatial||!window.MonumentSpatialCore){box.textContent='Set an outdoor anchor and observer position to inspect line of sight.';return}
  const surface={lat:p.lat,lon:p.lon,anchor:{lat:p.lat,lon:p.lon},altitude:Number(p.altitude||0),width:moment.form==='column'?moment.geometry.diameter:moment.geometry.width,height:moment.geometry.height,heading:moment.geometry.heading,maxRange:moment.visibility.maxRangeM};
- const g=Spatial.apparent(observer,surface),camera=MonumentSpatialCore.projectToCamera(observer,observer.heading,surface,observer.fov);
+ const g=window.Spatial.apparent(observer,surface),camera=window.MonumentSpatialCore.projectToCamera(observer,observer.heading,surface,observer.fov);
  box.textContent='DISTANCE '+(g.distance/1000).toFixed(2)+' km · BEARING '+g.bearing.toFixed(1)+'° · ELEVATION '+g.elevationBottom.toFixed(1)+'° / '+g.elevationTop.toFixed(1)+'° · WIDTH '+g.widthAngle.toFixed(2)+'° · EARTH DROP '+g.earthDrop.toFixed(1)+' m · '+(g.frontFacing?'FRONT FACE':'BACK FACE')+' · '+(g.aboveGeometricHorizon?'ABOVE GEOMETRIC HORIZON':'BELOW GEOMETRIC HORIZON')+' · '+(g.rangeOK?'IN RANGE':'OUT OF RANGE')+' · '+(camera.visible?'IN SIMULATED CAMERA FOV':'OUTSIDE SIMULATED CAMERA FOV')+'. Terrain and atmosphere are not verified.';
 }
 function readMenuItems(){return [...($('menuItems')?.children||[])].map(r=>{const x=[...r.querySelectorAll('input')];return {name:x[0]?.value||'',price:x[1]?.value||'',ingredients:x[2]?.value||'',allergens:x[3]?.value||''}})}
