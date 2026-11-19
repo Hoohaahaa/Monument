@@ -66,6 +66,7 @@ function validateMoment(m){
  if(m.schemaVersion!==VERSION)errors.push('schema_version_unsupported');
  if(!FORMS.has(m.form))errors.push('form_invalid');
  if(!m.placement||!MODES.has(m.placement.mode))errors.push('placement_mode_invalid');
+ if(!['landscape','venue'].includes(m.experienceKind||'landscape'))errors.push('experience_kind_invalid');
  if(!m.geometry||!finite(m.geometry.heading)||m.geometry.heading<0||m.geometry.heading>=360)errors.push('heading_out_of_range');
  if(!m.geometry||!FACES.has(m.geometry.facing))errors.push('facing_invalid');
  if(!m.geometry||!m.geometry.frame||typeof m.geometry.frame.enabled!=='boolean')errors.push('frame_invalid');
@@ -91,7 +92,7 @@ function validateMoment(m){
   if(!o||!finite(o.lat)||!finite(o.lon)||Math.abs(o.lat)>90||Math.abs(o.lon)>180)errors.push('indoor_origin_invalid');
   if(!finite(a.x)||!finite(a.y)||!finite(a.z))errors.push('indoor_anchor_invalid');
   if(!['wall','floor','ceiling','column','free'].includes(i.surface))errors.push('indoor_surface_invalid');
-  if(!['none','local','sky'].includes(i.arMode||'none'))errors.push('indoor_ar_mode_invalid');
+  if(!['none','local','sky','qr'].includes(i.arMode||'none'))errors.push('indoor_ar_mode_invalid');
   if(i.arMode==='qr'&&(!i.qr?.payload||!finite(i.qr?.physicalSizeM)||i.qr.physicalSizeM<=0.01))errors.push('indoor_qr_anchor_invalid');
   if(i.surface==='wall'&&!i.room)warnings.push('indoor_room_not_named');
  }
