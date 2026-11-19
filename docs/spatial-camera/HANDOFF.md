@@ -2,6 +2,15 @@
 
 Last updated: 2026-11-19
 
+
+## 2026-11-19 usability repair pass
+
+- Fixed a broken first-run interaction: the page no longer requests camera permission automatically during load. Camera permission is requested only after the user taps **Open Camera**, avoiding a browser-blocked autoplay/permission path.
+- Fixed the persistent **Publish** action: it now opens the release-review sheet and asks the user to confirm with the in-sheet Publish control; it no longer calls publish immediately while opening the editor.
+- Added a content gate: a Moment with no text, image or audio cannot create a visitor link even if its spatial model validates.
+- Added `tests/app-shell-contract.test.cjs` to guard these entry-point behaviors.
+- These are source-level fixes only so far. They have not yet been deployed or verified in a real mobile browser. WebXR remains session-local and is not geographically aligned; server publishing, persistent anchors, and Point/Column/Trajectory XR rendering remain incomplete.
+
 ## New integration work completed
 
 - Added `engine/moment-model.js`: canonical schema for point, framed surface, column, sky surface and trajectory; indoor/outdoor placement; explicit altitude datum; content/media; visibility; separate release schedule and trajectory clock; geodesic trajectory interpolation; indoor-local/WGS84 conversion; legacy-work migration.
