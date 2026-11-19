@@ -172,3 +172,15 @@ No speculative or repeated Vercel deployments. A branch or commit is not a verif
 - Executed the focused Moment-model, XR-adapter, XR-renderer-contract and spatial-runtime-contract test cases in an isolated test harness: **29 passed, 0 failed**.
 - This is not a full `npm test` run and not a physical-device/browser E2E run. GitHub returned no workflow runs or commit status checks for the latest push, so CI is still unconfirmed.
 - Network/DNS prevented cloning the repository into the local QA container. No Vercel deployment was created and no production alias was changed.
+
+## 2026-11-19 MVP verification and preview
+
+- Executed the full repository test command `npm test` in a fresh Vercel Node 24 sandbox cloned from this branch.
+- First run exposed a malformed newline in `tests/vertical-datum-contract.test.cjs`; rewrote that test file with real line breaks and reran the complete suite.
+- Final result: **61 tests passed, 0 failed**.
+- JavaScript syntax checks passed for `app.js`, Moment model, spatial runtime contract, occlusion policy, vertical datum contract, XR adapter and XR renderer.
+- Deployed one immutable Vercel Preview from commit `96d92323cb09829798027d2f08608fc9763cc66b`: `https://monument-field-test-q3yz6tnyd-mos-projects-efbc27a5.vercel.app/` (deployment `dpl_AdtGWCSzd3eN4AG6Mxf52buwpZQ7`, READY).
+- HTTP smoke checks returned 200 for the page, `app.js`, Moment model, XR adapter and XR renderer.
+- This is a preview deployment only; no production alias was changed.
+- Browser E2E and physical Android camera/GPS/compass/WebXR tests remain pending. The QA sandbox had no Chromium binary, so the preview has not yet been visually exercised by automated browser interaction.
+- The currently functional scope remains the camera-first web authoring prototype: map placement, Moment authoring, local browser draft, URL-embedded visitor share link and session-local WebXR on compatible devices. It is not a server-backed public registry and does not yet provide persistent geospatial AR or real-world occlusion.
