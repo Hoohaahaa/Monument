@@ -117,3 +117,14 @@ Additional fixes since the navigation DOM repair:
 A deterministic mocked-browser interaction run exercised nav, sheet, map, map tap, geometry, map footprint, Global/range, local save/restore, map restore centering, 100m/200m/reset, publish hash, clipboard, GPS selection/watch and camera stream startup. Persian URL-hash serialization/deserialization was independently round-trip tested. Embedded JS syntax, HTML tag balance, IDs and script references were checked. See `docs/spatial-camera/QA_REPORT.md`.
 
 Important: this is not a real Chromium/WebKit or physical-device test. Do not claim CSS rendering, OSM tile network delivery, Android/iOS permission prompts, compass hardware, or AR world-lock have passed. No new Vercel deployment has been created. Do not deploy until the single mobile browser QA gate in QA_REPORT.md can be completed or explicitly disclose that limitation to the user.
+
+
+## 2026-11-19: first successful browser QA and preview handoff
+- Source commit tested: `9bf6d31b4d7fddf18131602b4c6c05ce1cdabb1f`.
+- Preview deployment: `dpl_EH8cdsetP6r8PLa9B663pKdFdeXe` (READY, Preview only; no production alias).
+- Preview URL: https://monument-field-test-gbycj6val-mos-projects-efbc27a5.vercel.app/
+- Playwright Chromium at 390×844: 20/20 first-pass checks and 16/16 persistence/share checks passed; zero page errors and zero console errors.
+- Confirmed Leaflet script and OSM tiles load, GPS mock places marker, map recenters on restored location, width/height/heading controls, Global/range, localStorage reload, 100m/200m test offsets/reset, Persian share hash opened in fresh context, clipboard, and fake camera stream.
+- No further deployment was made after this tested Preview.
+- Physical Android/iOS compass and actual GPS/camera still require device QA. Keep the distinction between URL-hash share/localStorage and a server-side global Moment registry explicit.
+- QA details: `docs/spatial-camera/QA_REPORT.md`.
