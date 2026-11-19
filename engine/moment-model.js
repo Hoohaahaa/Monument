@@ -118,7 +118,8 @@ function validateMoment(m){
    });
    if(motion.waypoints.length>=2&&(motion.waypoints[0].t!==0||motion.waypoints[motion.waypoints.length-1].t!==1))warnings.push('trajectory_should_span_zero_to_one');
   }
-  if(motion.startsAt&&Number.isNaN(Date.parse(motion.startsAt)))errors.push('trajectory_start_invalid');
+  if(!motion.startsAt)errors.push('trajectory_start_required');
+  else if(Number.isNaN(Date.parse(motion.startsAt)))errors.push('trajectory_start_invalid');
  }
  const c=m.content||{};
  if(!['text','image','audio','mixed'].includes(c.type))errors.push('content_type_invalid');
