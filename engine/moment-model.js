@@ -127,7 +127,7 @@ function validateMoment(m){
  const c=m.content||{};
  if(!['text','image','audio','mixed'].includes(c.type))errors.push('content_type_invalid');
  if(!['artwork','story','menu','clock','news','advertisement'].includes(c.contentType||'story'))errors.push('content_format_invalid');
- if(!['none','local','sky'].includes(c.arMode||'none'))errors.push('content_ar_mode_invalid');
+ if(!['none','local','sky','qr'].includes(c.arMode||'none'))errors.push('content_ar_mode_invalid');
  if(c.sourceUrl&&!/^https:\/\//i.test(c.sourceUrl))errors.push('source_url_must_be_https');
  if(c.menu!==undefined&&(!Array.isArray(c.menu)||c.menu.length>100))errors.push('menu_invalid');
  if(Array.isArray(c.menu))c.menu.forEach((item,index)=>{if(!item||typeof item.name!=='string'||item.name.length>160)errors.push('menu_item_invalid:'+index)});
