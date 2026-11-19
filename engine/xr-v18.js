@@ -57,7 +57,7 @@ function computeAnchor(view){
  const w=Math.max(.1,Number(record.width_m)||3),h=Math.max(.1,Number(record.height_m)||4);
  const distance=Math.max(2.8,Math.min(12,Math.max(w*1.15,h*.85)));
  const yOffset=sky?Math.max(2.5,Math.min(10000,Number(record.altitude_m)||4)):0;
- anchor=Object.freeze({center:[p.x+forward[0]*distance,p.y+yOffset,p.z+forward[2]*distance],forward,right,up,w,h,kind:record.kind||'surface',sky:horizontalSky,trajectory:record.trajectory||null,facing:record.facing||'both',frameEnabled:record.frameEnabled!==false,placedAt:performance.now()});
+ anchor=Object.freeze({center:[p.x+forward[0]*distance,p.y+yOffset,p.z+forward[2]*distance],forward,right,up,w,h,kind:record.kind||'surface',sky:horizontalSky,trajectory:record.trajectory||null,facing:record.facing||'both',frameEnabled:record.frameEnabled!==false,placementMode:record.placementMode||'outdoor',trajectoryOrigin:record.trajectory?.waypoints?.[0]?.position||null,trajectoryBase:[p.x+forward[0]*distance,p.y+yOffset,p.z+forward[2]*distance],placedAt:performance.now()});
  status('PLACED IN SESSION LOCAL SPACE · TRACKING MAY DRIFT');
 }
 function vertices(){
@@ -128,7 +128,7 @@ function trajectoryPosition(now){
  let elapsed=now-start-trajectoryPausedTotal;
  if(paused)elapsed-=Math.max(0,now-trajectoryPauseAt);
  if(elapsed<0)return {active:false,progress:0,position:tr.waypoints[0].position,reason:'not_started'};
- if(!tr.loop&&elapsed>=duration){trajectoryCompleted=true;return {active:false,progress:1,position:tr.waypoints[tr.waypoints.length-1].position,reason:'completed'}}
+ if(!tr.loop&&elapsed>=duration)return {active:false,progress:1,position:tr.waypoints[tr.waypoints.length-1].position,reason:'completed'};
  const progress=tr.loop?(elapsed%duration)/duration:clamp(elapsed/duration,0,1);
  let index=0;while(index<tr.waypoints.length-2&&progress>tr.waypoints[index+1].t)index++;
  const a=tr.waypoints[index],b=tr.waypoints[index+1],span=b.t-a.t,t=span>0?clamp((progress-a.t)/span,0,1):0;
