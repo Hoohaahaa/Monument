@@ -42,8 +42,8 @@ function interpolatePosition(a,b,t,mode){
 }
 function defaultMoment(overrides={}){
  const base={
-  schemaVersion:VERSION,id:null,title:'Untitled Moment',subtitle:'',content:{type:'text',text:'',imageUrl:'',audioUrl:'',altText:'',language:'en',attribution:''},
-  form:'framed-surface',placement:{mode:'outdoor',anchor:{lat:null,lon:null,altitude:0,altitudeDatum:'MSL'},indoor:{venueId:'',venueName:'',room:'',floor:'',origin:null,rotationDeg:0,anchor:{x:0,y:0,z:0},surface:'wall'}},
+  schemaVersion:VERSION,id:null,title:'Untitled Moment',subtitle:'',experienceKind:'landscape',content:{type:'text',contentType:'story',subtitle:'',place:'',text:'',imageUrl:'',audioUrl:'',altText:'',language:'en',attribution:'',artist:'',materials:'',provenance:'',sourceLabel:'',sourceUrl:'',menu:[],arMode:'none'},
+  form:'framed-surface',placement:{mode:'outdoor',anchor:{lat:null,lon:null,altitude:0,altitudeDatum:'MSL'},indoor:{venueId:'',venueName:'',room:'',floor:'',origin:null,rotationDeg:0,anchor:{x:0,y:0,z:0},surface:'wall',arMode:'none',qr:{payload:'',physicalSizeM:0.15}}},
   geometry:{width:3,height:2,depth:0.12,diameter:1,heading:0,facing:'both',frame:{enabled:true,style:'line',thickness:0.04,color:'#ff6248'},offset:{x:0,y:0,z:0}},
   sky:{elevation:0,orientation:'horizontal',readableFromBelow:true},
   motion:{kind:'static',startsAt:null,durationMs:60000,interpolation:'geodesic-linear',loop:false,waypoints:[]},
@@ -91,6 +91,8 @@ function validateMoment(m){
   if(!o||!finite(o.lat)||!finite(o.lon)||Math.abs(o.lat)>90||Math.abs(o.lon)>180)errors.push('indoor_origin_invalid');
   if(!finite(a.x)||!finite(a.y)||!finite(a.z))errors.push('indoor_anchor_invalid');
   if(!['wall','floor','ceiling','column','free'].includes(i.surface))errors.push('indoor_surface_invalid');
+  if(!['none','local','sky'].includes(i.arMode||'none'))errors.push('indoor_ar_mode_invalid');
+  if(i.arMode==='qr'&&(!i.qr?.payload||!finite(i.qr?.physicalSizeM)||i.qr.physicalSizeM<=0.01))errors.push('indoor_qr_anchor_invalid');
   if(i.surface==='wall'&&!i.room)warnings.push('indoor_room_not_named');
  }
  const v=m.visibility||{};
@@ -123,6 +125,11 @@ function validateMoment(m){
  }
  const c=m.content||{};
  if(!['text','image','audio','mixed'].includes(c.type))errors.push('content_type_invalid');
+ if(!['artwork','story','menu','clock','news','advertisement'].includes(c.contentType||'story'))errors.push('content_format_invalid');
+ if(!['none','local','sky'].includes(c.arMode||'none'))errors.push('content_ar_mode_invalid');
+ if(c.sourceUrl&&!/^https:\/\//i.test(c.sourceUrl))errors.push('source_url_must_be_https');
+ if(c.menu!==undefined&&(!Array.isArray(c.menu)||c.menu.length>100))errors.push('menu_invalid');
+ if(Array.isArray(c.menu))c.menu.forEach((item,index)=>{if(!item||typeof item.name!=='string'||item.name.length>160)errors.push('menu_item_invalid:'+index)});
  if(typeof c.text!=='string'||c.text.length>20000)errors.push('content_text_invalid');
  for(const k of ['imageUrl','audioUrl'])if(c[k]&&!/^https:\/\//i.test(c[k]))errors.push(k+'_must_be_https');
  if(m.form==='sky-surface'&&p.mode==='indoor')warnings.push('sky_surface_indoor_context_unusual');
@@ -154,10 +161,10 @@ function migrateLegacyWork(old={}){
  const form=old.form||old.geometryType||(old.kind==='sky'?'sky-surface':'framed-surface');
  const validForm=FORMS.has(form)?form:(venue?'point':'framed-surface');
  const m=defaultMoment({
-  id:old.id||null,title:old.title||'Untitled Moment',subtitle:old.subtitle||'',
-  content:{type:old.image?'mixed':'text',text:old.body||old.text||'',imageUrl:old.image||'',audioUrl:old.audio||'',altText:old.accessibility||'',language:old.language||'en',attribution:old.sourceLabel||''},
+  id:old.id||null,title:old.title||'Untitled Moment',subtitle:old.subtitle||'',experienceKind:old.kind==='venue'?'venue':'landscape',
+  content:{type:old.image&&old.audio?'mixed':old.image?'image':old.audio?'audio':'text',contentType:old.contentType||'story',subtitle:old.subtitle||'',place:old.place||old.venue||'',text:old.body||old.text||'',imageUrl:old.image||'',audioUrl:old.audio||'',altText:old.accessibility||'',language:old.language||'en',attribution:old.sourceLabel||'',artist:old.artist||'',materials:old.materials||'',provenance:old.provenance||'',sourceLabel:old.sourceLabel||'',sourceUrl:old.sourceUrl||'',menu:old.menu||[],arMode:old.arMode||'none'},
   form:validForm,
-  placement:venue?{mode:'indoor',indoor:{venueId:old.venueId||'',venueName:old.place||old.venue||'',room:old.room||'',floor:old.floor||'',origin:old.origin||null,rotationDeg:old.rotationDeg||0,anchor:old.localAnchor||{x:0,y:0,z:0},surface:old.indoorSurface||'wall'}}:{mode:'outdoor',anchor:{lat:Number(old.lat),lon:Number(old.lon),altitude:Number(old.altitude||0),altitudeDatum:old.datum==='ellipsoid'?'WGS84_ELLIPSOID':'MSL'}},
+  placement:venue?{mode:'indoor',indoor:{venueId:old.venueId||'',venueName:old.place||old.venue||'',room:old.room||'',floor:old.floor||'',origin:old.origin||null,rotationDeg:old.rotationDeg||0,anchor:old.localAnchor||{x:0,y:0,z:0},surface:old.indoorSurface||'wall',arMode:old.arMode||'none'}}:{mode:'outdoor',anchor:{lat:Number(old.lat),lon:Number(old.lon),altitude:Number(old.altitude||0),altitudeDatum:old.datum==='ellipsoid'?'WGS84_ELLIPSOID':'MSL'}},
   geometry:{width:Number(old.width||old.width_m||3),height:Number(old.height||old.height_m||2),diameter:Number(old.diameter||1),heading:norm(Number(old.heading||0)),facing:old.facing||'both',frame:{enabled:old.frame?.enabled!==false,style:old.frame?.style||'line',thickness:Number(old.frame?.thickness||.04),color:old.frame?.color||'#ff6248'}},
   visibility:{audience:old.visibility==='public'?'public':old.visibility==='private'?'private':'unlisted',maxRangeM:Number(old.maxRange||old.maxRangeM||1000),startsAt:old.startsAt||null,endsAt:old.endsAt||null},
   metadata:{revision:Number(old.revision||1),sourceVersion:'legacy-import'}
