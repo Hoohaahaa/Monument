@@ -60,3 +60,33 @@ This is deterministic logic simulation, not a real Chromium/WebKit browser test.
 
 ## Next gate before calling it production-ready
 One real mobile browser QA pass must verify: page layout at phone viewport, Leaflet tile load, GPS permission and map centering, camera permission, compass heading, 100m/200m movement response, local reload persistence, and share URL opened in a second browser context. Keep deployment preview-only until this gate is passed.
+
+
+## Real headless Chromium browser run — 2026-11-19
+Tested the deployed Preview using Playwright + Chromium at a 390×844 mobile viewport, with browser camera and geolocation permissions granted and fake camera/GPS devices.
+
+First full interaction pass: **20/20 PASS**, zero page errors and zero console errors.
+- Page title and load.
+- Footer visible, outside Stage, and within viewport.
+- All four navigation controls visible.
+- Create sheet opens; geometry controls visible.
+- Width 24m × height 8m and heading 180° update the readout.
+- Global toggle and 500m local radius work.
+- Local save survives reload.
+- Leaflet loads; OpenStreetMap tiles render.
+- GPS permission resolves to the mocked test coordinate; marker appears.
+- +100m and +200m test actions and reset work.
+- Publish generates the share URL hash; clipboard action reports success.
+- Fake camera stream starts; video element receives a MediaStream and placeholder hides.
+
+Second persistence/share pass: **16/16 PASS**, zero page errors and zero console errors.
+- Rechecked nav/footer geometry and editor/geometry inputs.
+- Rechecked Leaflet load and actual tile image delivery.
+- GPS places a marker at the mocked location.
+- Saved location survives reload and map reopens centered on that saved coordinate (observed center 40.712809, -74.006009).
+- 100m/200m moves and reset work.
+- Persian title/body and surface settings publish to a URL hash.
+- Share URL opens in a fresh browser context with the text and dimensions restored.
+- Fake camera stream starts.
+
+These tests are browser automation with simulated permissions, fake camera and mocked GPS coordinates. They do not test the user's physical compass, actual GPS drift, real camera sensor quality, or iOS permission prompts. They also do not turn the approximate projection into world-locked AR.
