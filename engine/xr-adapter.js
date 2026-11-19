@@ -11,6 +11,9 @@ function toXRRecord(moment){
   body:text||String(moment.content?.altText||''),width_m:Number(moment.geometry?.width)||3,height_m:Number(moment.geometry?.height)||2,
   altitude_m:sky?Math.max(2.5,Number(moment.sky?.elevation)||4):0,
   style:{preset:moment.geometry?.frame?.enabled?'outline':'editorial'},
+  frameEnabled:moment.geometry?.frame?.enabled!==false,
+  facing:moment.geometry?.facing||'both',
+  orientation:sky?(moment.sky?.orientation||'horizontal'):'vertical',
   imageUrl:moment.content?.imageUrl||'',altText:moment.content?.altText||'',
   placementMode:moment.placement?.mode||'outdoor'
  }};
