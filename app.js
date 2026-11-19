@@ -2,18 +2,19 @@
 const $=id=>document.getElementById(id),M=window.MonumentMomentModel;
 if(!M)return;
 const KEY='monument.moment.draft.v1';
-let moment=M.defaultMoment({id:'moment-'+Date.now()}),map=null,marker=null,shape=null,route=null,stream=null,visitor=false;
+let moment=M.defaultMoment({id:'moment-'+Date.now()}),map=null,marker=null,shape=null,route=null,stream=null,visitor=false,waypointSeq=0;
 const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
 const dec=s=>{try{return JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')))))}catch{return null}};
 const val=id=>$(id)?.value??'';
-const num=(id,d=0)=>{const n=Number(val(id));return Number.isFinite(n)?n:d};
+const num=(id,d=0)=>{const raw=val(id);if(raw==='')return d;const n=Number(raw);return Number.isFinite(n)?n:d};
 function field(id,label,type,v,attrs){return '<div class="field"><label for="'+id+'">'+label+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+(v??'')+'" '+(attrs||'')+'></div>'}
 function select(id,label,items,v){return '<div class="field"><label for="'+id+'">'+label+'</label><select id="'+id+'">'+items.map(x=>'<option value="'+x[0]+'" '+(x[0]===v?'selected':'')+'>'+x[1]+'</option>').join('')+'</select></div>'}
 function status(s){$('status').textContent=s}
 function sheet(open){$('editor').classList.toggle('open',open)}
 function anchor(){
- if(moment.placement.mode==='indoor'){const i=moment.placement.indoor;return i.origin?M.localToWgs84(i.origin,i.anchor,i.rotationDeg||0):null}
- return moment.placement.anchor;
+ const lift=moment.form==='sky-surface'?Number(moment.sky.elevation||0):0;
+ if(moment.placement.mode==='indoor'){const i=moment.placement.indoor;return i.origin?M.localToWgs84(i.origin,{x:i.anchor.x,y:i.anchor.y+lift,z:i.anchor.z},i.rotationDeg||0):null}
+ return {...moment.placement.anchor,altitude:Number(moment.placement.anchor.altitude||0)+lift};
 }
 function addControls(){
  if($('spatialControls'))return;
@@ -69,14 +70,14 @@ function sync(){
 }
 function readWaypoints(){return [...$('waypointList').children].map((r,index)=>{const n=Number(r.dataset.n),t=num('wpT'+n,index/Math.max(1,r.parentElement.children.length-1));const p=moment.placement.mode==='indoor'?{x:num('wpX'+n),y:num('wpY'+n),z:num('wpZ'+n)}:{lat:num('wpLat'+n),lon:num('wpLon'+n),altitude:num('wpAlt'+n)};return {t,position:p}}).sort((a,b)=>a.t-b.t)}
 function addWaypointRow(w){
- const list=$('waypointList'),n=list.children.length,indoor=moment.placement.mode==='indoor',pos=w?.position||(indoor?{x:n*2,y:2,z:0}:{lat:num('geoLat'),lon:num('geoLon')+n*.001,altitude:0});
+ const list=$('waypointList'),n=waypointSeq++,indoor=moment.placement.mode==='indoor',pos=w?.position||(indoor?{x:n*2,y:2,z:0}:{lat:num('geoLat'),lon:num('geoLon')+n*.001,altitude:0});
  const row=document.createElement('div');row.className='waypoint-row';row.dataset.n=n;
- row.innerHTML='<div class="waypoint-head"><b>Waypoint '+(n+1)+'</b><button type="button" class="close" aria-label="Remove waypoint">×</button></div>'+field('wpT'+n,'Path progress · 0–1','number',w?.t??(n/(Math.max(1,n+1))),'min="0" max="1" step=".01"')+
+ row.innerHTML='<div class="waypoint-head"><b>Waypoint '+(n+1)+'</b><button type="button" class="close" aria-label="Remove waypoint">×</button></div>'+field('wpT'+n,'Path progress · 0–1','number',w?.t??(n===0?0:n===1?1:Math.min(.99,n/(n+1))),'min="0" max="1" step=".01"')+
  (indoor?'<div class="pair">'+field('wpX'+n,'X · m','number',pos.x,'step="any"')+field('wpY'+n,'Y · m','number',pos.y,'step="any"')+field('wpZ'+n,'Z · m','number',pos.z,'step="any"')+'</div>':'<div class="pair">'+field('wpLat'+n,'Latitude','number',pos.lat,'step="any"')+field('wpLon'+n,'Longitude','number',pos.lon,'step="any"')+field('wpAlt'+n,'Altitude · m','number',pos.altitude||0,'step="any"')+'</div>');
- row.querySelector('button').onclick=()=>{if(list.children.length<=2){status('A trajectory needs at least two waypoints.');return}row.remove();[...list.children].forEach((r,i)=>{r.dataset.n=i;r.querySelector('b').textContent='Waypoint '+(i+1)});sync()};
+ row.querySelector('button').onclick=()=>{if(list.children.length<=2){status('A trajectory needs at least two waypoints.');return}row.remove();[...list.children].forEach((r,i)=>{r.querySelector('b').textContent='Waypoint '+(i+1)});sync()};
  list.appendChild(row);
 }
-function renderWaypoints(){if(!$('waypointList'))return;$('waypointList').innerHTML='';const w=moment.motion.waypoints||[];if(w.length)w.forEach(addWaypointRow);else{addWaypointRow();addWaypointRow()}}
+function renderWaypoints(){if(!$('waypointList'))return;waypointSeq=0;$('waypointList').innerHTML='';const w=moment.motion.waypoints||[];if(w.length)w.forEach(addWaypointRow);else{addWaypointRow();addWaypointRow()}}
 function conditional(){const indoor=moment.placement.mode==='indoor',f=moment.form;$('outdoorFields').hidden=indoor;$('indoorFields').hidden=!indoor;$('columnDimensions').hidden=f!=='column';$('surfaceDimensions').hidden=f==='column'||f==='point';$('skyFields').hidden=f!=='sky-surface';$('trajectoryFields').hidden=f!=='trajectory'}
 function preview(){
  $('previewTitle').textContent=moment.title||'A thought, left here.';$('previewBody').textContent=moment.content.text||'Your text will appear in this space.';
