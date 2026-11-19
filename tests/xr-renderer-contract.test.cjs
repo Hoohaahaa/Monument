@@ -18,3 +18,11 @@ test('frame visibility is passed to the shader rather than ignored',()=>{
  assert.match(xr,/edge\*\.32\*frameEnabled/);
  assert.match(xr,/getUniformLocation\(program,'frameEnabled'\),anchor\.frameEnabled\?1:0/);
 });
+
+test('Point and Column use distinct 3D meshes rather than the panel quad',()=>{
+ assert.match(xr,/a\.kind==='column'\|\|a\.kind==='point'/);
+ assert.match(xr,/if\(a\.kind==='column'\)\{cylinder\(w\/2,0,h\)/);
+ assert.match(xr,/const rings=8,slices=16/);
+ assert.match(xr,/solidGeometry/);
+ assert.match(xr,/mesh\.length\/5/);
+});
