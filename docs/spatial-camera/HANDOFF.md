@@ -7,7 +7,12 @@ Last updated: 2026-11-19
 - Added `engine/moment-model.js`: canonical schema for point, framed surface, column, sky surface and trajectory; indoor/outdoor placement; explicit altitude datum; content/media; visibility; separate release schedule and trajectory clock; geodesic trajectory interpolation; indoor-local/WGS84 conversion; legacy-work migration.
 - Added `tests/moment-model.test.cjs`: 10 tests. Executed in a Node 22 Vercel sandbox; 10 passed, 0 failed.
 - Added `docs/spatial-camera/FEATURE_RECOVERY_MATRIX.md` to distinguish recovered, modeled, integrated and verified capabilities.
-- The model is not yet connected to the camera-first UI, map, XR renderer or server registry. No deployment has been created.
+- Wired the model into a new root `index.html` derived from the immutable approved camera-first shell and `app.js`. The four persistent actions remain Camera / Place / Create / Publish.
+- Create now exposes Point, Framed Surface, Column, Sky Surface and Trajectory; Outdoor/Indoor coordinates; width/height/diameter, frame, facing and heading; sky elevation/orientation; trajectory start/duration/loop/waypoints; text/image/audio/alt text; audience/range/visibility window.
+- Place now supports map tap, draggable anchor, surface footprint, draggable heading handle, trajectory polyline, locate-me, fit-to-work and map expand.
+- Local draft persistence and read-only visitor links are implemented. Publish remains explicitly a share-link prototype, not a global public registry or server-side revision system.
+- `npm test`: 23 passed, 0 failed. `node --check app.js` and static checks for shell controls and module load order passed in a Node 22 sandbox.
+- XR V18 is not yet wired into this UI; the camera card explicitly says editorial preview / not world-locked. Physical Android camera/GPS/compass/XR QA and browser E2E remain pending. No Vercel deployment or production alias was changed.
 Current task: restore the advanced spatial capabilities into the user's approved camera-first Monument shell.
 
 ## Do not make the user repeat these decisions
