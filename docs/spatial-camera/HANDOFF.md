@@ -109,3 +109,15 @@ Canonical source references:
 
 ## Release policy
 No speculative or repeated Vercel deployments. A branch or commit is not a verified preview. A READY deployment is not proof that the mobile UI works. Unit tests are not physical-device tests. Report each status separately and honestly.
+
+## Open implementation tasks created
+
+- [#9 — Block release on real mobile browser QA](https://github.com/Hoohaahaa/Monument/issues/9): no supported Chromium binary is available in the current QA sandbox, so mobile E2E remains unverified.
+- [#10 — Implement real spatial rendering for Point, Column and timed Trajectory](https://github.com/Hoohaahaa/Monument/issues/10): current WebXR adapter only supports framed/sky surfaces; trajectory playback is not rendered.
+- [#11 — Replace share-link prototype with server-backed publication and revisions](https://github.com/Hoohaahaa/Monument/issues/11): localStorage drafts and URL-hash visitor links are not durable server publication.
+
+## Verification after usability repairs
+
+- `npm test`: 34 passed, 0 failed in the Node 22 sandbox.
+- `node --check app.js` and `node --check engine/xr-v18.js`: passed.
+- Browser E2E was attempted but not run: the installed Playwright version reports Chromium unsupported on this Ubuntu 26.04 sandbox image. No new preview has been deployed from these changes.
