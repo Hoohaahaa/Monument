@@ -10,14 +10,14 @@ This matrix separates source-confirmed functionality from the current integratio
 | Point / marker | Camera shell + spatial engine | Supported as `point` | Initial Create control + map marker | Model tests + static shell checks |
 | Framed surface / panel | Engine geometry and later spatial publishing app | Supported as `framed-surface` | Width/height, frame, facing, map footprint and heading handle | Model tests + static shell checks |
 | Column / vertical form | User-confirmed earlier product family; requires geometry-specific controls | Supported as `column` | Diameter/height controls + map footprint | Model tests + static shell checks |
-| Indoor venue / room / wall / ceiling / floor | Later Portfolio app has venue and marker-oriented flow; persistent room anchors are not confirmed | Local venue origin + room/floor/surface coordinates | Venue, room, floor, surface and local XYZ controls | Coordinate round-trip test + static shell checks |
+| Indoor venue / room / wall / ceiling / floor | Later Portfolio app has venue and marker-oriented flow; persistent room anchors are not confirmed | Local venue origin + room/floor/surface coordinates + QR reference metadata | Venue/room/floor/surface/local XYZ, local/sky/QR mode, QR scanner; QR detection records a 2D reference only, not a 3D pose | Coordinate round-trip + QR model tests; device scan QA pending |
 | Outdoor WGS84 placement | Engine and later spatial publishing app | Supported as outdoor anchor with explicit altitude datum | Lat/lon, altitude datum, GPS, map tap and draggable pin | Validation test + static shell checks |
 | Static sky surface | Accepted V18 WebXR baseline | Supported as `sky-surface` | Elevation/orientation controls + V18 session-local XR plane; not a persistent geo-anchor | Adapter tests; physical device QA pending |
 | Timed trajectory | Historical one-file Vercel variants remain to be fully inspected; ordinary `startsAt/endsAt` is only availability | Supported as `trajectory` with waypoints, start, duration, interpolation and loop | Start/duration/loop/waypoint controls + map path preview; camera playback pending | Interpolation and schedule-separation tests |
-| Text / image / audio | Later Portfolio app supports text, image and audio URLs | Unified content object | Text/image/audio controls; text + image can render on supported XR surfaces; audio is preview-only, spatial audio pending | Migration + XR adapter tests |
-| Heading / front-back / dimensions | Recovered engine + spatial app | Geometry fields and validation | Dimension, facing and heading controls; draggable heading handle on map | Model tests + static shell checks |
+| Text / image / audio | Later Portfolio app supports text, image and audio URLs | Unified content object | Artwork/story/menu/clock/news/advertisement formats; artist/materials/provenance/source attribution; menu items; text/image/audio controls; text + image can render on supported XR surfaces; audio is preview-only | Migration + XR adapter tests |
+| Heading / front-back / dimensions | Recovered engine + spatial app | Geometry fields and validation | Dimension, facing, heading, local XYZ offset and draggable heading handle on map | Model tests + static shell checks |
 | Visibility / radius / schedule | Later spatial publishing app | Audience, range and separate availability window | Audience, range, visible-from and visible-until controls | Visibility tests + static shell checks |
-| Draft / revisions / share / registry | Later Portfolio app has registry and revisions; recovered camera shell only encodes a share payload in URL hash | Metadata is versioned; backend registry not yet connected | Local draft save + read-only visitor link; server registry/revisions pending | Static checks only; no end-to-end backend test |
+| Observer / sightline simulation | Recovered `engine-core.js` and `spatial.js` | Geodesic, apparent elevation, curvature, facing, range and FOV calculations | Observer lat/lon/altitude/heading/FOV inputs, use-device-location action and geometry metrics; no terrain or camera calibration claim | Recovered geometry tests + syntax checks |\n| Draft / revisions / share / registry | Later Portfolio app has registry and revisions; recovered camera shell only encodes a share payload in URL hash | Metadata is versioned; backend registry not yet connected | Local draft save + read-only visitor link; server registry/revisions pending | Static checks only; no end-to-end backend test |
 
 ## What was added in this integration pass
 
@@ -36,7 +36,7 @@ This matrix separates source-confirmed functionality from the current integratio
 
 ## Next implementation sequence
 
-1. Reconcile and fully inspect the older one-file Vercel variants to recover any remaining form/trajectory capabilities not represented in the canonical Portfolio source.
+1. Fully inspect the older one-file Vercel variants to recover any remaining form/trajectory capabilities not represented in the canonical Portfolio source.
 2. Connect the existing XR V18 renderer to the new Moment model. Preserve the session-local anchor behavior and clearly distinguish it from persistent geospatial anchoring.
 3. Implement trajectory playback in the camera/renderer, not just the map preview; add interpolation, clock, pause/resume, loop and visibility-window tests.
 4. Connect drafts, revisions and public registry to a server backend. Keep local save, visitor link and global publication as distinct states.
