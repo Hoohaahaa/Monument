@@ -194,3 +194,20 @@ No speculative or repeated Vercel deployments. A branch or commit is not a verif
 - Latest immutable Preview deployed from commit `0e535a4948093ca442f1f518452d57fd2879f356`: `https://monument-field-test-4og10g0j3-mos-projects-efbc27a5.vercel.app/` (deployment `dpl_6Hj5Vz3zAKjULdkfsPzsZvehCNms`, READY). Production aliases remain unchanged.
 - Browser inspection confirms the page now boots without the prior `decode is not defined` exception and the four footer controls are visible and receive hit-testing at their own button bounds. The Create handler executes and opens the editor in the browser DOM.
 - A complete automated Playwright flow (save → reload → map → publish → visitor) could not be completed in this sandbox: Chromium sessions closed during subsequent UI interaction/reload. Do not mark mobile E2E as passed on this evidence. Physical Android QA is still required.
+
+
+## 2026-11-19 — Geospatial camera overlay prototype
+
+Work is isolated on branch `feature/geospatial-camera-overlay`; the existing preview and production aliases are untouched.
+
+- Added `engine/geospatial-camera.js`: camera-session GPS watch, device-orientation heading, local bearing/distance calculations, compass-relative azimuth reference lines, nearby named OSM features through Overpass, manual map-location support, and selectable projected place labels.
+- Connected the module to the existing explicit Open Camera permission flow. GPS and compass permission requests occur only after the user's camera action.
+- The overlay suppresses labels when GPS accuracy exceeds 80 m or reported compass accuracy exceeds 30 degrees.
+- The map's manual location selection feeds the camera overlay. A manual location is retained rather than silently replaced by the device GPS.
+- Added `tests/geospatial-camera-contract.test.cjs` for module load order, explicit camera start, GPS/heading input, OSM place data, manual location, accuracy gating, and honest capability wording.
+
+### Important prototype boundary
+
+This is a compass-registered geographic camera preview, not ARCore Geospatial/VPS and not a persistent world-locked terrain mesh. The drawn lines are an azimuth reference grid, explicitly not terrain geometry. Browser device orientation does not provide a reliable full camera pose or camera calibration; therefore this prototype must not be described as sub-meter AR or as accurately draped over the ground. Nearby labels are projected from bearing and approximate horizontal field of view. Physical Android testing is required.
+
+Next engineering gate: validate on a real Android phone; then choose and implement the supported native ARCore Geospatial/VPS path for true world-locked placement. Keep the web preview as a graceful fallback and retain the accuracy gating.
