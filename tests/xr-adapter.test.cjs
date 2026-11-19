@@ -28,7 +28,8 @@ test('Point and Column map to dedicated 3D geometry while trajectory remains pen
  assert.equal(point.supported,true);assert.equal(point.record.kind,'point');assert.equal(point.record.width_m,.8);assert.equal(point.record.height_m,1.5);
  const column=XR.toXRRecord(M.defaultMoment({form:'column',geometry:{diameter:2.4,height:18},content:{type:'text',text:'Column'}}));
  assert.equal(column.supported,true);assert.equal(column.record.kind,'column');assert.equal(column.record.width_m,2.4);assert.equal(column.record.height_m,18);
- const trajectory=XR.toXRRecord(M.defaultMoment({form:'trajectory'}));assert.equal(trajectory.supported,false);
+ const moving=M.defaultMoment({form:'trajectory',content:{type:'text',text:'Moving marker'},motion:{kind:'trajectory',startsAt:'2026-11-19T12:00:00Z',durationMs:60000,interpolation:'geodesic-linear',loop:true,waypoints:[{t:0,position:{lat:35,lon:51,altitude:100}},{t:1,position:{lat:35.001,lon:51.002,altitude:140}}]}});const trajectory=XR.toXRRecord(moving);assert.equal(trajectory.supported,true);assert.equal(trajectory.record.kind,'trajectory');assert.equal(trajectory.record.trajectory.waypoints.length,2);assert.equal(trajectory.record.trajectory.loop,true);
+ const invalid=XR.toXRRecord(M.defaultMoment({form:'trajectory'}));assert.equal(invalid.supported,false);
  const imageOnly=M.defaultMoment({form:'framed-surface',content:{type:'image',text:'',imageUrl:'https://example.com/image.jpg',altText:'A mountain'}});
  const result=XR.toXRRecord(imageOnly);assert.equal(result.supported,true);assert.equal(result.record.imageUrl,'https://example.com/image.jpg');assert.equal(result.record.body,'A mountain');
 });
