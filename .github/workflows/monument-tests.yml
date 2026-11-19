@@ -1,0 +1,30 @@
+name: Monument contract tests
+
+on:
+  push:
+    branches:
+      - restore-spatial-engine-integration-audit
+  pull_request:
+    branches:
+      - main
+      - recover-spatial-camera-baseline
+
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run contract and geometry tests
+        run: npm test
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check engine/moment-model.js
+          node --check engine/xr-adapter.js
+          node --check engine/xr-v18.js
+          node --check engine/qr-scanner.js
