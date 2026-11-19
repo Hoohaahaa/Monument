@@ -33,7 +33,7 @@ test('point, column and trajectory are not falsely advertised; image-only surfac
 });
 
 test('XR adapter carries sky orientation, face visibility and frame state to renderer',()=>{
- const m=M.defaultMoment({form:'sky-surface',sky:{orientation:'vertical',elevation:12},geometry:{facing:'front',frame:{enabled:false}}});
+ const m=M.defaultMoment({form:'sky-surface',sky:{orientation:'vertical',elevation:12},geometry:{facing:'front',frame:{enabled:false}},content:{type:'text',text:'Vertical sky sign'}});
  const result=XR.toXRRecord(m);
  assert.equal(result.record.orientation,'vertical');
  assert.equal(result.record.facing,'front');
