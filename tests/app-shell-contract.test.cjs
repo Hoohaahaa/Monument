@@ -33,3 +33,10 @@ test('camera launch remains bound to the explicit Open Camera control', () => {
   assert.match(app, /async function camera\(\)/);
   assert.match(app, /\$\('openCamera'\)\.onclick=camera/);
 });
+
+const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+test('camera stage closes before the XR HUD and bottom navigation', () => {
+  assert.match(html, /id="share">Copy share link<\/button><\/div><\/div>\s*<section class="xr-hud"/);
+  assert.match(html, /<footer class="bottom">[\s\S]*id="cameraTab"[\s\S]*id="mapTab"[\s\S]*id="editTab"[\s\S]*id="publishQuick"[\s\S]*<\/footer>/);
+});
