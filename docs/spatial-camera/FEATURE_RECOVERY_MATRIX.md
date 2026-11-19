@@ -73,3 +73,11 @@ This matrix separates source-confirmed functionality from the current integratio
 - Adapter and renderer contract tests were added, but they have not been executed in this environment. The previous 38 passing tests predate this batch.
 - Timed trajectory camera playback remains pending; map path preview is not equivalent to XR trajectory playback.
 - These meshes still use a session-local WebXR placement anchor. They do not align to the WGS84 map pin or persist across sessions.
+
+
+## 2026-11-19 spatial intelligence foundation
+
+- A provider-neutral runtime contract now records localization provider, coordinate frame, tracking state, accuracy, timestamp and persistence.
+- Occlusion reports track source, confidence, coverage, freshness and semantic classes. Segmentation-only is explicitly not considered reliable metric depth.
+- Long-term roadmap covers ARCore Geospatial, ARKit/RealityKit, optional scanned-site VPS, local depth/mesh occlusion, distant terrain/building meshes and separate cloud/sky research.
+- Persistent geospatial anchoring is tracked in issue #12; environmental depth/occlusion is tracked in issue #13.
