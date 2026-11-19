@@ -1,6 +1,6 @@
 (function(){'use strict';
 const $=id=>document.getElementById(id);
-let session=null,gl=null,refSpace=null,layer=null,program=null,vertexBuffer=null,texture=null,textureCanvas=null,texctx=null,record=null,anchor=null,camStream=null,frameCount=0,poseCount=0,paused=false,sourceOrigin=0,lastText=null,lastStatus=0,initialAnchor=null,textureImage=null,textureImageUrl='';
+let session=null,gl=null,refSpace=null,layer=null,program=null,vertexBuffer=null,texture=null,textureCanvas=null,texctx=null,record=null,anchor=null,camStream=null,frameCount=0,poseCount=0,paused=false,sourceOrigin=0,lastText=null,lastStatus=0,initialAnchor=null,textureImage=null,textureImageUrl='',trajectoryPauseAt=0,trajectoryPausedTotal=0,trajectoryCompleted=false;
 const center=(a,b)=>a+b;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function status(s){if($('xrStatus'))$('xrStatus').textContent=s;if($('cameraStatus'))$('cameraStatus').textContent=s}
@@ -57,14 +57,14 @@ function computeAnchor(view){
  const w=Math.max(.1,Number(record.width_m)||3),h=Math.max(.1,Number(record.height_m)||4);
  const distance=Math.max(2.8,Math.min(12,Math.max(w*1.15,h*.85)));
  const yOffset=sky?Math.max(2.5,Math.min(10000,Number(record.altitude_m)||4)):0;
- anchor=Object.freeze({center:[p.x+forward[0]*distance,p.y+yOffset,p.z+forward[2]*distance],forward,right,up,w,h,kind:record.kind||'surface',sky:horizontalSky,facing:record.facing||'both',frameEnabled:record.frameEnabled!==false,placedAt:performance.now()});
+ anchor=Object.freeze({center:[p.x+forward[0]*distance,p.y+yOffset,p.z+forward[2]*distance],forward,right,up,w,h,kind:record.kind||'surface',sky:horizontalSky,trajectory:record.trajectory||null,facing:record.facing||'both',frameEnabled:record.frameEnabled!==false,placedAt:performance.now()});
  status('PLACED IN SESSION LOCAL SPACE · TRACKING MAY DRIFT');
 }
 function vertices(){
  const a=anchor,w=a.w/2,h=a.h/2;
  // Geometry-specific meshes: columns are true vertical cylinders; points are
  // pin markers with a spherical head and narrow stem, not rectangular panels.
- if(a.kind==='column'||a.kind==='point'){
+ if(a.kind==='column'||a.kind==='point'||a.kind==='trajectory'){
   const out=[],segments=24;
   const push=(v,u,q)=>out.push(...v,u,q);
   const center=a.center, right=a.right, forward=a.forward;
@@ -120,11 +120,62 @@ function vertices(){
  for(const face of faces)for(const [v,u,q] of face)push(v,u,q);
  return new Float32Array(out);
 }
-function draw(t,frame){if(!session)return;session.requestAnimationFrame(draw);try{frameCount++;const pose=frame.getViewerPose(refSpace);if(!pose){if(t-lastStatus>2500){lastStatus=t;status('WAITING FOR TRACKING · MOVE PHONE SLOWLY')}return;}poseCount++;gl.bindFramebuffer(gl.FRAMEBUFFER,layer.framebuffer);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);if(!anchor)computeAnchor(pose.views[0]);if(!anchor)return;if(lastText!==arMessage())updateTexture();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);const mesh=vertices();gl.bufferData(gl.ARRAY_BUFFER,mesh,gl.STATIC_DRAW);gl.vertexAttribPointer(gl.getAttribLocation(program,'position'),3,gl.FLOAT,false,20,0);gl.vertexAttribPointer(gl.getAttribLocation(program,'uvIn'),2,gl.FLOAT,false,20,12);gl.uniform1f(gl.getUniformLocation(program,'time'),t*.001);gl.uniform1f(gl.getUniformLocation(program,'lum'),.28);gl.uniform1f(gl.getUniformLocation(program,'frameEnabled'),anchor.frameEnabled?1:0);gl.uniform1f(gl.getUniformLocation(program,'solidGeometry'),anchor.kind==='point'||anchor.kind==='column'?1:0);if(anchor.kind==='point'||anchor.kind==='column')gl.disable(gl.CULL_FACE);else gl.enable(gl.CULL_FACE);for(const view of pose.views){const vp=layer.getViewport(view);gl.viewport(vp.x,vp.y,vp.width,vp.height);gl.uniformMatrix4fv(gl.getUniformLocation(program,'matrix'),false,product(view.projectionMatrix,view.transform.inverse.matrix));gl.drawArrays(gl.TRIANGLES,0,mesh.length/5)}if(t-lastStatus>4000){lastStatus=t;status('TRACKING '+poseCount+'/'+frameCount+' · LOCAL SPACE · TRACKING CAN DRIFT · NO OCCLUSION')}}catch(e){status('XR RENDER ERROR: '+e.message);console.error(e)}}
+
+function trajectoryPosition(now){
+ const tr=anchor?.trajectory;if(!tr||!tr.waypoints?.length)return null;
+ const start=Date.parse(tr.startsAt),duration=tr.durationMs;
+ if(!Number.isFinite(start)||!Number.isFinite(duration)||duration<=0)return null;
+ let elapsed=now-start-trajectoryPausedTotal;
+ if(paused)elapsed-=Math.max(0,now-trajectoryPauseAt);
+ if(elapsed<0)return {active:false,progress:0,position:tr.waypoints[0].position,reason:'not_started'};
+ if(!tr.loop&&elapsed>=duration){trajectoryCompleted=true;return {active:false,progress:1,position:tr.waypoints[tr.waypoints.length-1].position,reason:'completed'}}
+ const progress=tr.loop?(elapsed%duration)/duration:clamp(elapsed/duration,0,1);
+ let index=0;while(index<tr.waypoints.length-2&&progress>tr.waypoints[index+1].t)index++;
+ const a=tr.waypoints[index],b=tr.waypoints[index+1],span=b.t-a.t,t=span>0?clamp((progress-a.t)/span,0,1):0;
+ const p=a.position,q=b.position;
+ let position;
+ if(anchor.placementMode==='indoor')position={x:(p.x||0)+((q.x||0)-(p.x||0))*t,y:(p.y||0)+((q.y||0)-(p.y||0))*t,z:(p.z||0)+((q.z||0)-(p.z||0))*t};
+ else{
+  const lat=(p.lat||0)+((q.lat||0)-(p.lat||0))*t;
+  const lon=(p.lon||0)+((q.lon||0)-(p.lon||0))*t;
+  const altitude=(p.altitude||0)+((q.altitude||0)-(p.altitude||0))*t;
+  position={lat,lon,altitude};
+ }
+ return {active:true,progress,position,reason:'playing'};
+}
+function updateTrajectoryAnchor(now){
+ if(!anchor?.trajectory||!anchor.trajectoryOrigin||!anchor.trajectoryBase)return;
+ const sample=trajectoryPosition(now);if(!sample)return;
+ const origin=anchor.trajectoryOrigin,p=sample.position;
+ let x=0,y=0,z=0;
+ if(anchor.placementMode==='indoor'){x=(p.x||0)-(origin.x||0);y=(p.y||0)-(origin.y||0);z=(p.z||0)-(origin.z||0)}
+ else{
+  const radius=6371008.8,lat0=(origin.lat||0)*Math.PI/180;
+  x=((p.lon||0)-(origin.lon||0))*Math.PI/180*radius*Math.cos(lat0);
+  z=((p.lat||0)-(origin.lat||0))*Math.PI/180*radius;
+  y=(p.altitude||0)-(origin.altitude||0);
+ }
+ // Outdoor east/north deltas are deliberately mapped into the session's
+ // horizontal basis. They are NOT north-aligned without a geospatial pose.
+ const c=anchor.trajectoryBase;
+ anchor={...anchor,center:[c[0]+anchor.right[0]*x+anchor.forward[0]*z,c[1]+y,c[2]+anchor.right[2]*x+anchor.forward[2]*z]};
+ if(sample.reason==='not_started')status('TRAJECTORY SCHEDULED · WAITING FOR START TIME');
+ else if(sample.reason==='completed'&&!trajectoryCompleted){trajectoryCompleted=true;status('TRAJECTORY COMPLETE · FINAL POSITION HELD')}
+ else if(!paused&&now-lastStatus>2500){lastStatus=now;status('TRAJECTORY '+Math.round(sample.progress*100)+'% · SESSION-LOCAL AXES · NOT NORTH-ALIGNED')}
+}
+function pauseTrajectory(){
+ if(!anchor?.trajectory||paused)return false;
+ paused=true;trajectoryPauseAt=Date.now();status('TRAJECTORY PAUSED');return true;
+}
+function resumeTrajectory(){
+ if(!anchor?.trajectory||!paused)return false;
+ trajectoryPausedTotal+=Math.max(0,Date.now()-trajectoryPauseAt);paused=false;status('TRAJECTORY RESUMED');return true;
+}
+function draw(t,frame){if(!session)return;session.requestAnimationFrame(draw);try{frameCount++;const pose=frame.getViewerPose(refSpace);if(!pose){if(t-lastStatus>2500){lastStatus=t;status('WAITING FOR TRACKING · MOVE PHONE SLOWLY')}return;}poseCount++;gl.bindFramebuffer(gl.FRAMEBUFFER,layer.framebuffer);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);if(!anchor)computeAnchor(pose.views[0]);if(!anchor)return;updateTrajectoryAnchor(Date.now());if(lastText!==arMessage())updateTexture();gl.bindBuffer(gl.ARRAY_BUFFER,vertexBuffer);const mesh=vertices();gl.bufferData(gl.ARRAY_BUFFER,mesh,gl.STATIC_DRAW);gl.vertexAttribPointer(gl.getAttribLocation(program,'position'),3,gl.FLOAT,false,20,0);gl.vertexAttribPointer(gl.getAttribLocation(program,'uvIn'),2,gl.FLOAT,false,20,12);gl.uniform1f(gl.getUniformLocation(program,'time'),t*.001);gl.uniform1f(gl.getUniformLocation(program,'lum'),.28);gl.uniform1f(gl.getUniformLocation(program,'frameEnabled'),anchor.frameEnabled?1:0);gl.uniform1f(gl.getUniformLocation(program,'solidGeometry'),anchor.kind==='point'||anchor.kind==='column'?1:0);if(anchor.kind==='point'||anchor.kind==='column')gl.disable(gl.CULL_FACE);else gl.enable(gl.CULL_FACE);for(const view of pose.views){const vp=layer.getViewport(view);gl.viewport(vp.x,vp.y,vp.width,vp.height);gl.uniformMatrix4fv(gl.getUniformLocation(program,'matrix'),false,product(view.projectionMatrix,view.transform.inverse.matrix));gl.drawArrays(gl.TRIANGLES,0,mesh.length/5)}if(t-lastStatus>4000){lastStatus=t;status('TRACKING '+poseCount+'/'+frameCount+' · LOCAL SPACE · TRACKING CAN DRIFT · NO OCCLUSION')}}catch(e){status('XR RENDER ERROR: '+e.message);console.error(e)}}
 function cleanup(){session=null;anchor=null;initialAnchor=null;gl=null;program=null;texture=null;document.body.classList.remove('xr-active');$('xrHud').hidden=true}
-async function startXR(work){const c=document.createElement('canvas');gl=c.getContext('webgl',{alpha:true,antialias:true,xrCompatible:true});if(!gl)throw Error('WebGL not supported');session=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['local'],optionalFeatures:['dom-overlay'],domOverlay:{root:$('xrHud')}});session.addEventListener('end',cleanup);await gl.makeXRCompatible();layer=new XRWebGLLayer(session,gl);await session.updateRenderState({baseLayer:layer,depthNear:0.01,depthFar:1000});refSpace=await session.requestReferenceSpace('local');record=work;anchor=null;initialAnchor=null;frameCount=0;poseCount=0;lastText=null;setTextureImage(work.imageUrl||'');configureGL();document.body.classList.add('xr-active');$('xrHud').hidden=false;$('xrMessage').value=arMessage();session.requestAnimationFrame(draw)}
+async function startXR(work){const c=document.createElement('canvas');gl=c.getContext('webgl',{alpha:true,antialias:true,xrCompatible:true});if(!gl)throw Error('WebGL not supported');session=await navigator.xr.requestSession('immersive-ar',{requiredFeatures:['local'],optionalFeatures:['dom-overlay'],domOverlay:{root:$('xrHud')}});session.addEventListener('end',cleanup);await gl.makeXRCompatible();layer=new XRWebGLLayer(session,gl);await session.updateRenderState({baseLayer:layer,depthNear:0.01,depthFar:1000});refSpace=await session.requestReferenceSpace('local');record=work;anchor=null;initialAnchor=null;frameCount=0;poseCount=0;lastText=null;paused=false;trajectoryPauseAt=0;trajectoryPausedTotal=0;trajectoryCompleted=false;setTextureImage(work.imageUrl||'');configureGL();document.body.classList.add('xr-active');$('xrHud').hidden=false;$('xrMessage').value=arMessage();session.requestAnimationFrame(draw)}
 async function fallback(work){record=work;const el=$('cameraLayer');el.hidden=false;$('cameraSurface').hidden=true;status('LIVE CAMERA ONLY · WORLD-LOCKED AR IS NOT AVAILABLE ON THIS DEVICE');try{if(window.MONUMENT_CAMERA_STREAM){$('cameraVideo').srcObject=window.MONUMENT_CAMERA_STREAM;await $('cameraVideo').play()}else if(navigator.mediaDevices?.getUserMedia){camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});$('cameraVideo').srcObject=camStream;await $('cameraVideo').play()}}catch(e){status('CAMERA UNAVAILABLE · CLOSE THIS VIEW AND CHECK PERMISSIONS');}}
 function closeCamera(){const el=$('cameraLayer');el.hidden=true;$('cameraSurface').hidden=false;try{camStream?.getTracks().forEach(t=>t.stop())}catch(e){}camStream=null;$('cameraVideo').srcObject=null}
 async function launch(work){record=work;try{if(!navigator.xr)throw Error('WEBXR NOT SUPPORTED');await startXR(work)}catch(e){if(session){try{await session.end()}catch(_){}}if(gl)cleanup();window.MONUMENT_APP?.toast('USING CAMERA COMPOSITE / '+e.message);await fallback(work)}}
-$('xrExit').onclick=()=>session?.end();$('xrPlace').onclick=()=>{anchor=null;status('REPOSITION REQUESTED · NEW LOCAL PLACEMENT')};$('xrEdit').onclick=()=>{$('xrEditor').hidden=!$('xrEditor').hidden};$('xrApply').onclick=()=>{record.body=$('xrMessage').value.slice(0,500);lastText=null;window.MONUMENT_XR_ON_EDIT?.(record.body);$('xrEditor').hidden=true;status('TEXT CHANGED LOCALLY · SAVE OR PUBLISH TO KEEP IT')};$('cameraClose').onclick=closeCamera;window.MONUMENT_XR={launch,closeCamera};
+$('xrExit').onclick=()=>session?.end();$('xrPause')&&($('xrPause').onclick=pauseTrajectory);$('xrResume')&&($('xrResume').onclick=resumeTrajectory);$('xrPlace').onclick=()=>{anchor=null;status('REPOSITION REQUESTED · NEW LOCAL PLACEMENT')};$('xrEdit').onclick=()=>{$('xrEditor').hidden=!$('xrEditor').hidden};$('xrApply').onclick=()=>{record.body=$('xrMessage').value.slice(0,500);lastText=null;window.MONUMENT_XR_ON_EDIT?.(record.body);$('xrEditor').hidden=true;status('TEXT CHANGED LOCALLY · SAVE OR PUBLISH TO KEEP IT')};$('cameraClose').onclick=closeCamera;window.MONUMENT_XR={launch,closeCamera,pauseTrajectory,resumeTrajectory};
 })();
