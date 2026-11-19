@@ -31,3 +31,11 @@ test('point, column and trajectory are not falsely advertised; image-only surfac
  const imageOnly=M.defaultMoment({form:'framed-surface',content:{type:'image',text:'',imageUrl:'https://example.com/image.jpg',altText:'A mountain'}});
  const result=XR.toXRRecord(imageOnly);assert.equal(result.supported,true);assert.equal(result.record.imageUrl,'https://example.com/image.jpg');assert.equal(result.record.body,'A mountain');
 });
+
+test('XR adapter carries sky orientation, face visibility and frame state to renderer',()=>{
+ const m=M.defaultMoment({form:'sky-surface',sky:{orientation:'vertical',elevation:12},geometry:{facing:'front',frame:{enabled:false}}});
+ const result=XR.toXRRecord(m);
+ assert.equal(result.record.orientation,'vertical');
+ assert.equal(result.record.facing,'front');
+ assert.equal(result.record.frameEnabled,false);
+});
