@@ -9,7 +9,7 @@ function toXRRecord(moment){
  if(!text&&!imageUrl)return {supported:false,reason:'Add text or an image before starting the current XR surface renderer.'};
  return {supported:true,scope:'session-local',geographicAnchorApplied:false,record:{
   id:moment.id||'moment',kind:trajectory?'trajectory':sky?'sky':point?'point':column?'column':moment.placement?.mode==='indoor'?'venue':'surface',
-  body:text||String(moment.content?.altText||''),width_m:point?Math.max(.2,Number(moment.geometry?.diameter)||.6):column?(Number(moment.geometry?.diameter)||1):(Number(moment.geometry?.width)||3),height_m:point?Math.max(.4,Number(moment.geometry?.height)||1.2):column?(Number(moment.geometry?.height)||4):(Number(moment.geometry?.height)||2),
+  body:text||String(moment.content?.altText||''),width_m:point||trajectory?Math.max(.2,Number(moment.geometry?.diameter)||.6):column?(Number(moment.geometry?.diameter)||1):(Number(moment.geometry?.width)||3),height_m:point||trajectory?Math.max(.4,Number(moment.geometry?.height)||1.2):column?(Number(moment.geometry?.height)||4):(Number(moment.geometry?.height)||2),
   altitude_m:sky?Math.max(2.5,Number(moment.sky?.elevation)||4):0,
   style:{preset:moment.geometry?.frame?.enabled?'outline':'editorial'},
   frameEnabled:!point&&!column&&moment.geometry?.frame?.enabled!==false,
