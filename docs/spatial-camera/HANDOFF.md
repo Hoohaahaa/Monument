@@ -140,3 +140,9 @@ No speculative or repeated Vercel deployments. A branch or commit is not a verif
 - **Verification limitation:** GitHub source writes completed, but this environment could not clone the repository (DNS/network unavailable). The new tests and JavaScript syntax checks have therefore **not been executed**. The prior 38-pass result applies to the previous commit, not this Point/Column batch.
 - No Vercel deployment was created. No production alias was changed. Do not manually test the previous preview as if it contained this batch.
 - Remaining in issue #10: timed trajectory playback, pause/resume/loop and geospatially aligned motion. These are not implemented by this change.
+
+
+## CI follow-up
+
+- Added `.github/workflows/monument-tests.yml` to run `npm test` and Node syntax checks on pushes to this working branch and relevant pull requests.
+- GitHub currently returns no commit status checks for the workflow commit. Treat CI as configured but **not yet confirmed running or passing**.
