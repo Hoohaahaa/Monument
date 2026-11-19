@@ -5,7 +5,7 @@ const center=(a,b)=>a+b;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 function status(s){if($('xrStatus'))$('xrStatus').textContent=s;if($('cameraStatus'))$('cameraStatus').textContent=s}
 function tone(){return record?.style?.preset||'editorial'}
-function arMessage(){return String(record?.body||'MONUMENT').slice(0,500)}
+function arMessage(){return String(record?.body||(record?.imageUrl?'':'MONUMENT')).slice(0,500)}
 function createTextureCanvas(){textureCanvas=document.createElement('canvas');textureCanvas.width=1024;textureCanvas.height=512;texctx=textureCanvas.getContext('2d')}
 function setTextureImage(url){
  if(url===textureImageUrl)return;
