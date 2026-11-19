@@ -128,3 +128,15 @@ No speculative or repeated Vercel deployments. A branch or commit is not a verif
 - The renderer now distinguishes horizontal overhead sky planes from vertical sky panels, selects front/back/both mesh faces, and applies the frame toggle in the fragment shader.
 - Added adapter and renderer contract tests. Latest suite: 38 passed, 0 failed; syntax checks for the XR adapter and renderer passed.
 - Important: this is still session-local WebXR placement. The selected geographic map heading is not used as a true-north AR heading, and sky elevation is not a persistent geospatial altitude.
+
+
+## 2026-11-19 Point / Column XR implementation pass
+
+- The XR adapter now accepts `point` and `column` in addition to framed and sky surfaces. Timed `trajectory` remains explicitly unsupported by the current renderer.
+- Point renders as a 3D pin marker (stem + rounded head), using the Moment diameter/height fields.
+- Column renders as a vertical cylinder using diameter and height, rather than being flattened into the panel quad.
+- Point/Column use a visible solid material pass; panel/sky surfaces retain their existing textured plane path, face selection and frame toggle.
+- Added adapter and renderer contract assertions for the new geometry mapping and mesh paths.
+- **Verification limitation:** GitHub source writes completed, but this environment could not clone the repository (DNS/network unavailable). The new tests and JavaScript syntax checks have therefore **not been executed**. The prior 38-pass result applies to the previous commit, not this Point/Column batch.
+- No Vercel deployment was created. No production alias was changed. Do not manually test the previous preview as if it contained this batch.
+- Remaining in issue #10: timed trajectory playback, pause/resume/loop and geospatially aligned motion. These are not implemented by this change.
