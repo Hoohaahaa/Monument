@@ -155,3 +155,12 @@ No speculative or repeated Vercel deployments. A branch or commit is not a verif
 - Indoor waypoints are interpolated in venue-local XYZ. Outdoor WGS84 waypoints are converted to a local tangent approximation and mapped into the current session's camera-relative horizontal basis.
 - **Important limitation:** outdoor trajectory playback is not true-north aligned, not VPS/geospatial anchored and not persistent between sessions. The renderer reports the local-axis limitation; it must not be interpreted as geographic AR accuracy.
 - Adapter and renderer contract tests were added/updated. Execution and browser verification are pending; the current environment has not provided a passing CI result for this batch. No preview or production deployment was created.
+
+
+## 2026-11-19 Spatial Intelligence foundation
+
+- Added `docs/spatial-camera/SPATIAL_INTELLIGENCE_ROADMAP.md` with a staged architecture for persistent localization, nearby depth/mesh occlusion, distant terrain/building visibility and a separate future cloud/sky workstream.
+- Added provider-neutral `engine/spatial-runtime-contract.js`: localization reports include provider, coordinate frame, tracking state, horizontal/vertical/heading accuracy, timestamp and persistence; occlusion reports include source, confidence, coverage, age and classes.
+- The contract explicitly rejects a WebXR session-local provider claiming persistent anchors, and does not treat segmentation-only masks as reliable metric depth.
+- Added contract tests and loaded the module in the web shell. Tests have not yet been executed in this environment.
+- Created issue #12 for persistent geospatial anchors/native runtimes and issue #13 for real-world depth, scene understanding and occlusion.
