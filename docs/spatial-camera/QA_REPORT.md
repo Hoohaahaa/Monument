@@ -90,3 +90,8 @@ Second persistence/share pass: **16/16 PASS**, zero page errors and zero console
 - Fake camera stream starts.
 
 These tests are browser automation with simulated permissions, fake camera and mocked GPS coordinates. They do not test the user's physical compass, actual GPS drift, real camera sensor quality, or iOS permission prompts. They also do not turn the approximate projection into world-locked AR.
+
+
+Responsive viewport spot-check (same deployed build):
+- 360×800: all four navigation buttons visible, footer inside viewport, Create sheet opens.
+- 768×1024: all four navigation buttons visible, footer inside viewport, Create sheet opens.
