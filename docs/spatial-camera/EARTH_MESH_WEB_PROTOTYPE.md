@@ -4,10 +4,10 @@
 - Android-first, browser-first delivery. The user should open a secure Vercel URL in Chrome; no separate installation is required for this phase.
 - Keep the camera-first Monument shell and the existing Camera / Place / Create / Publish actions.
 - The target visual is a continuous Earth-to-local-terrain experience, with the viewer's selected WGS84 location marked on the model.
-- Spatial surfaces remain multi-instance, georeferenced objects with editable latitude, longitude, altitude/datum, dimensions and heading. Existing Point, Column, Trajectory, Loop, Pause/Resume and WebXR work must be reused, not discarded.
+- Target spatial surfaces are multi-instance, georeferenced objects with editable latitude, longitude, altitude/datum, dimensions and heading. The existing Moment model currently authors one main geometry plus trajectory waypoints; a first-class multi-surface collection is a follow-up task, not yet delivered. Existing Point, Column, Trajectory, Loop, Pause/Resume and WebXR work must be reused, not discarded.
 
 ## What this prototype adds
-- A camera-stage Earth Mesh entry point.
+- A camera-stage Earth Mesh entry point that keeps the live camera passthrough visible underneath the 3D model overlay.
 - An interactive wireframe globe with WGS84-style latitude/longitude graticule and a selected-location marker.
 - A local terrain mode that requests a public Terrarium elevation tile (zoom 12), samples it into a 128×128 grid and renders a height-displaced mesh with a wireframe overlay.
 - Drag-to-rotate and wheel-to-zoom interaction.
@@ -18,7 +18,7 @@
 ## Explicit limitations — do not overclaim
 - This is a browser-rendered Earth/terrain model, not yet a camera-pose-registered AR mesh.
 - The local mesh uses a public elevation tile and is a single-tile prototype. It is not a continuous globe-to-ground LOD system, does not yet stitch adjacent tiles, and has no surveyed accuracy guarantee.
-- The current terrain mesh is model-space and manually orbitable. It does not yet remain locked to the camera's real-world pose as the phone moves.
+- The current terrain mesh is model-space and manually orbitable over the live camera image; its pose is not registered to the phone camera and it must not be mistaken for a world-locked AR surface. It does not yet remain locked to the camera's real-world pose as the phone moves.
 - No true ARCore Geospatial/VPS anchor, camera depth, scene mesh or occlusion is implemented here.
 - The public terrain endpoint can fail due to network/CORS/service availability; globe mode remains available as a fallback.
 - Browser-only access is the chosen first delivery path. If the required tracking fidelity cannot be reached in browser APIs, add an Android runtime behind the same shared spatial schema later; do not force the user to install it for this prototype.
