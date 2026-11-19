@@ -136,8 +136,17 @@ function trajectoryPosition(now){
  let position;
  if(anchor.placementMode==='indoor')position={x:(p.x||0)+((q.x||0)-(p.x||0))*t,y:(p.y||0)+((q.y||0)-(p.y||0))*t,z:(p.z||0)+((q.z||0)-(p.z||0))*t};
  else{
-  const lat=(p.lat||0)+((q.lat||0)-(p.lat||0))*t;
-  const lon=(p.lon||0)+((q.lon||0)-(p.lon||0))*t;
+  let lat,lon;
+  if(tr.interpolation==='geodesic-linear'){
+   const rad=Math.PI/180,lat1=(p.lat||0)*rad,lon1=(p.lon||0)*rad,lat2=(q.lat||0)*rad,lon2=(q.lon||0)*rad;
+   const v1=[Math.cos(lat1)*Math.cos(lon1),Math.cos(lat1)*Math.sin(lon1),Math.sin(lat1)];
+   const v2=[Math.cos(lat2)*Math.cos(lon2),Math.cos(lat2)*Math.sin(lon2),Math.sin(lat2)];
+   const omega=Math.acos(clamp(v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2],-1,1)),sinOmega=Math.sin(omega);
+   let v;
+   if(omega<1e-7||Math.abs(sinOmega)<1e-7)v=v1.map((n,i)=>n+(v2[i]-n)*t);
+   else{const a=Math.sin((1-t)*omega)/sinOmega,b=Math.sin(t*omega)/sinOmega;v=v1.map((n,i)=>n*a+v2[i]*b)}
+   lat=Math.atan2(v[2],Math.hypot(v[0],v[1]))/rad;lon=Math.atan2(v[1],v[0])/rad;
+  }else{lat=(p.lat||0)+((q.lat||0)-(p.lat||0))*t;lon=(p.lon||0)+((q.lon||0)-(p.lon||0))*t}
   const altitude=(p.altitude||0)+((q.altitude||0)-(p.altitude||0))*t;
   position={lat,lon,altitude};
  }
