@@ -6,6 +6,7 @@ let moment=M.defaultMoment({id:'moment-'+Date.now()}),map=null,marker=null,shape
 const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
 const dec=s=>{try{return JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')))))}catch{return null}};
 const val=id=>$(id)?.value??'';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=(id,d=0)=>{const raw=val(id);if(raw==='')return d;const n=Number(raw);return Number.isFinite(n)?n:d};
 function field(id,label,type,v,attrs){return '<div class="field"><label for="'+id+'">'+label+'</label><input id="'+id+'" type="'+(type||'text')+'" value="'+(v??'')+'" '+(attrs||'')+'></div>'}
 function select(id,label,items,v){return '<div class="field"><label for="'+id+'">'+label+'</label><select id="'+id+'">'+items.map(x=>'<option value="'+x[0]+'" '+(x[0]===v?'selected':'')+'>'+x[1]+'</option>').join('')+'</select></div>'}
