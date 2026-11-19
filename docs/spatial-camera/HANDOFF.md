@@ -184,3 +184,13 @@ No speculative or repeated Vercel deployments. A branch or commit is not a verif
 - This is a preview deployment only; no production alias was changed.
 - Browser E2E and physical Android camera/GPS/compass/WebXR tests remain pending. The QA sandbox had no Chromium binary, so the preview has not yet been visually exercised by automated browser interaction.
 - The currently functional scope remains the camera-first web authoring prototype: map placement, Moment authoring, local browser draft, URL-embedded visitor share link and session-local WebXR on compatible devices. It is not a server-backed public registry and does not yet provide persistent geospatial AR or real-world occlusion.
+
+## 2026-11-19 mobile-shell runtime repair
+
+- A real Chromium inspection at a 390×844 mobile viewport found the bottom navigation was nested inside the camera stage. The absolutely positioned camera layer covered the footer, so taps on Create/Place/Publish were intercepted.
+- Closed the camera stage before the XR HUD and footer. Added a regression test that guards this DOM boundary and the four persistent navigation controls.
+- The same browser inspection exposed a startup exception: the visitor-hash restore path called `decode()`, but the app's helper is named `dec()`. Changed the call to the defined decoder and added a startup regression test.
+- Full `npm test` after both fixes: **63 passed, 0 failed**. Syntax checks passed for all principal app/model/runtime/XR JavaScript modules.
+- Latest immutable Preview deployed from commit `0e535a4948093ca442f1f518452d57fd2879f356`: `https://monument-field-test-4og10g0j3-mos-projects-efbc27a5.vercel.app/` (deployment `dpl_6Hj5Vz3zAKjULdkfsPzsZvehCNms`, READY). Production aliases remain unchanged.
+- Browser inspection confirms the page now boots without the prior `decode is not defined` exception and the four footer controls are visible and receive hit-testing at their own button bounds. The Create handler executes and opens the editor in the browser DOM.
+- A complete automated Playwright flow (save → reload → map → publish → visitor) could not be completed in this sandbox: Chromium sessions closed during subsequent UI interaction/reload. Do not mark mobile E2E as passed on this evidence. Physical Android QA is still required.
