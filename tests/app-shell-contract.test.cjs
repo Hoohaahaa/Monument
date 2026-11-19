@@ -40,3 +40,8 @@ test('camera stage closes before the XR HUD and bottom navigation', () => {
   assert.match(html, /id="share">Copy share link<\/button><\/div><\/div>\s*<section class="xr-hud"/);
   assert.match(html, /<footer class="bottom">[\s\S]*id="cameraTab"[\s\S]*id="mapTab"[\s\S]*id="editTab"[\s\S]*id="publishQuick"[\s\S]*<\/footer>/);
 });
+
+test('startup restores visitor hashes through the defined decoder', () => {
+  assert.match(app, /const h=location\.hash\.startsWith\('#moment='\)\?dec\(location\.hash\.slice\(8\)\):dec\(location\.hash\.slice\(1\)\)/);
+  assert.doesNotMatch(app, /\bdecode\(location\.hash/);
+});
