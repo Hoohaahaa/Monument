@@ -121,3 +121,10 @@ No speculative or repeated Vercel deployments. A branch or commit is not a verif
 - `npm test`: 34 passed, 0 failed in the Node 22 sandbox.
 - `node --check app.js` and `node --check engine/xr-v18.js`: passed.
 - Browser E2E was attempted but not run: the installed Playwright version reports Chromium unsupported on this Ubuntu 26.04 sandbox image. No new preview has been deployed from these changes.
+
+## XR geometry control repair
+
+- The XR adapter now passes the selected sky orientation, face visibility and frame toggle to the renderer.
+- The renderer now distinguishes horizontal overhead sky planes from vertical sky panels, selects front/back/both mesh faces, and applies the frame toggle in the fragment shader.
+- Added adapter and renderer contract tests. Latest suite: 38 passed, 0 failed; syntax checks for the XR adapter and renderer passed.
+- Important: this is still session-local WebXR placement. The selected geographic map heading is not used as a true-north AR heading, and sky elevation is not a persistent geospatial altitude.
