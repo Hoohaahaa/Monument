@@ -3,7 +3,7 @@ const $=id=>document.getElementById(id);
 let session=null,gl=null,refSpace=null,layer=null,program=null,vertexBuffer=null,texture=null,textureCanvas=null,texctx=null,record=null,anchor=null,camStream=null,frameCount=0,poseCount=0,paused=false,sourceOrigin=0,lastText=null,lastStatus=0,initialAnchor=null;
 const center=(a,b)=>a+b;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-function status(s){$('xrStatus').textContent=s}
+function status(s){if($('xrStatus'))$('xrStatus').textContent=s;if($('cameraStatus'))$('cameraStatus').textContent=s}
 function tone(){return record?.style?.preset||'editorial'}
 function arMessage(){return String(record?.body||'MONUMENT').slice(0,500)}
 function createTextureCanvas(){textureCanvas=document.createElement('canvas');textureCanvas.width=1024;textureCanvas.height=512;texctx=textureCanvas.getContext('2d')}
