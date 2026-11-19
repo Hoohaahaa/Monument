@@ -26,6 +26,7 @@ jobs:
           node --check app.js
           node --check engine/moment-model.js
           node --check engine/spatial-runtime-contract.js
+          node --check engine/occlusion-render-policy.js
           node --check engine/xr-adapter.js
           node --check engine/xr-v18.js
           node --check engine/qr-scanner.js
