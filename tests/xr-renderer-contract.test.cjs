@@ -26,3 +26,23 @@ test('Point and Column use distinct 3D meshes rather than the panel quad',()=>{
  assert.match(xr,/solidGeometry/);
  assert.match(xr,/mesh\.length\/5/);
 });
+
+test('trajectory renderer interpolates waypoints and holds the final position',()=>{
+ assert.match(xr,/function trajectoryPosition\(now\)/);
+ assert.match(xr,/tr\.durationMs/);
+ assert.match(xr,/tr\.loop\?/);
+ assert.match(xr,/function updateTrajectoryAnchor\(now\)/);
+ assert.match(xr,/trajectoryBase/);
+ assert.match(xr,/trajectoryOrigin/);
+});
+test('trajectory pause and resume controls preserve elapsed playback time',()=>{
+ assert.match(xr,/function pauseTrajectory\(\)/);
+ assert.match(xr,/function resumeTrajectory\(\)/);
+ assert.match(xr,/trajectoryPausedTotal\+=Math\.max/);
+ assert.match(xr,/TRAJECTORY PAUSED/);
+ assert.match(xr,/TRAJECTORY RESUMED/);
+});
+test('trajectory geographic waypoints are explicitly session-local and not north-aligned',()=>{
+ assert.match(xr,/NOT north-aligned without a geospatial pose/);
+ assert.match(xr,/SESSION-LOCAL AXES · NOT NORTH-ALIGNED/);
+});
