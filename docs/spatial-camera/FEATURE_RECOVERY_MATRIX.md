@@ -65,3 +65,11 @@ This matrix separates source-confirmed functionality from the current integratio
 
 - XR control integration: sky orientation (horizontal/vertical), face visibility (front/back/both), and frame visibility now reach the renderer rather than being silently ignored.
 - Verified by adapter/renderer contract tests; total automated suite is 38 passing tests.
+
+
+## 2026-11-19 Point / Column XR implementation pass
+
+- Point and Column are now connected to geometry-specific WebXR meshes: a pin marker and a vertical cylinder respectively.
+- Adapter and renderer contract tests were added, but they have not been executed in this environment. The previous 38 passing tests predate this batch.
+- Timed trajectory camera playback remains pending; map path preview is not equivalent to XR trajectory playback.
+- These meshes still use a session-local WebXR placement anchor. They do not align to the WGS84 map pin or persist across sessions.
