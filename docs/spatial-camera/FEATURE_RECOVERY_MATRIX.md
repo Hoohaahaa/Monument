@@ -31,7 +31,7 @@ This matrix separates source-confirmed functionality from the current integratio
 - `recovery/monument-spatial-camera-v0.1.html` remains the immutable visual/interaction baseline. Its simple URL-hash share is not a public registry.
 - `engine/recovered/xr.js` and `engine/recovered/baseline/xr-v18.js` remain the renderer references. Their anchor is session-local; it is not a persistent geospatial anchor.
 - The old Spatial Lab layout is not reused.
-- The one-file deployments `monument-sky-composer`, `monument-sky-presence`, and `monument-world-20` are not yet fully inspected. Do not attribute a specific timed-trajectory feature to one of them until the full source is recovered.
+- The one-file deployments `monument-sky-composer`, `monument-sky-presence`, and `monument-world-20` remain uninspected at source level. Their public deployment URLs return the Vercel login/Deployment Protection page; the Vercel file API exposes only one source file per deployment and its content response is truncated. Do not attribute a specific timed-trajectory feature to one of them until authenticated full source access is available.
 - The canonical model is not yet wired into the camera-first UI, map, renderer or publishing backend. No user-facing feature should be called complete until those paths are integrated and tested.
 
 ## Next implementation sequence
