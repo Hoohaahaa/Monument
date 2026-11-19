@@ -1,0 +1,11 @@
+const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');
+const root=path.join(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const app=fs.readFileSync(path.join(root,'app.js'),'utf8');
+const earth=fs.readFileSync(path.join(root,'engine/earth-mesh.js'),'utf8');
+test('Earth mesh is available from the camera stage without replacing the camera shell',()=>{assert.match(html,/id="openEarth"/);assert.match(html,/id="earthView"/);assert.match(html,/id="earthCanvas"/);assert.match(html,/id="earth-mesh\.js"/);assert.match(html,/id="camera"/);});
+test('Earth viewer supports globe and local elevation terrain modes',()=>{assert.match(html,/id="earthGlobe"/);assert.match(html,/id="earthTerrain"/);assert.match(earth,/SphereGeometry/);assert.match(earth,/elevation-tiles-prod\.s3\.amazonaws\.com\/terrarium/);assert.match(earth,/PlaneGeometry|Float32BufferAttribute/);});
+test('Earth mesh receives manual map and GPS coordinates',()=>{assert.match(app,/MONUMENT_EARTH\?\.setLocation\(e\.latlng\.lat,e\.latlng\.lng\)/);assert.match(app,/MONUMENT_EARTH\?\.setLocation\(p\.coords\.latitude,p\.coords\.longitude\)/);});
+test('Earth view is explicitly a model, not falsely claimed as camera-tracked AR',()=>{assert.match(earth,/NOT CAMERA-TRACKED/);assert.match(earth,/EARTH MODEL/);});
+test('Camera HUD keeps the compass overlay and removes the editorial placeholder card',()=>{assert.match(html,/id="geoCanvas"/);assert.match(html,/\.moment-card\{display:none/);});
+test('Create sheet Apply saves the local draft before closing',()=>{assert.match(app,/closeEditor.*saveDraft\(\);sheet\(false\)/);});
