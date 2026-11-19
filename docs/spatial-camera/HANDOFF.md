@@ -12,8 +12,10 @@ Last updated: 2026-11-19
 - Place now supports map tap, draggable anchor, surface footprint, draggable heading handle, trajectory polyline, locate-me, fit-to-work and map expand.
 - Local draft persistence and read-only visitor links are implemented. Publish remains explicitly a share-link prototype, not a global public registry or server-side revision system.
 - `npm test`: 23 passed, 0 failed. `node --check app.js` and static checks for shell controls and module load order passed in a Node 22 sandbox.
-- XR V18 is not yet wired into this UI; the camera card explicitly says editorial preview / not world-locked. Physical Android camera/GPS/compass/XR QA and browser E2E remain pending.
-- One preview deployment was created in `monument-field-test`: `dpl_G8SRasBKwTxSN9DC6uzpnbKc7eto`, URL `https://monument-field-test-7kdrk31ds-mos-projects-efbc27a5.vercel.app/`. Vercel reports `READY`; the root page and both JS assets returned HTTP 200. The deployment has no aliases; production domains/aliases were not changed.
+- The accepted V18 WebXR renderer is now connected through `engine/xr-adapter.js` + `engine/xr-v18.js` for framed and sky surfaces. Text and image textures render. The anchor remains session-local; it is not geographically aligned to the map pin or persistent across sessions. Point, column and trajectory XR rendering remain pending. The non-XR fallback is a draggable camera composite and is explicitly not world-anchored.
+- Standard `npm test`: 26 passed, 0 failed. Syntax checks for app/XR modules and static shell contract/module-order checks passed in a Node 22 sandbox.
+- Physical Android camera/GPS/compass/WebXR QA and browser E2E remain pending.
+- Current manual-test preview: `dpl_9WPSF9YoDbyDtPR4PjfQ5m28LyfJ`, URL `https://monument-field-test-2bqe9gsxj-mos-projects-efbc27a5.vercel.app/`. Vercel reports `READY`; root page, app.js, Moment model, XR adapter and XR renderer all returned HTTP 200. This deployment has no aliases; production domains/aliases were not changed. The earlier preview `dpl_G8SRasBKwTxSN9DC6uzpnbKc7eto` is superseded.
 Current task: restore the advanced spatial capabilities into the user's approved camera-first Monument shell.
 
 ## Do not make the user repeat these decisions
