@@ -23,11 +23,12 @@ test('sky surface passes its elevation separately from public visibility timing'
  assert.equal(result.record.body,'Look up');
 });
 
-test('point, column and trajectory are not falsely advertised; image-only surfaces are supported',()=>{
- for(const form of ['point','column','trajectory']){
-  const result=XR.toXRRecord(M.defaultMoment({form}));
-  assert.equal(result.supported,false);
- }
+test('Point and Column map to dedicated 3D geometry while trajectory remains pending',()=>{
+ const point=XR.toXRRecord(M.defaultMoment({form:'point',geometry:{diameter:0.8,height:1.5},content:{type:'text',text:'Marker'}}));
+ assert.equal(point.supported,true);assert.equal(point.record.kind,'point');assert.equal(point.record.width_m,.8);assert.equal(point.record.height_m,1.5);
+ const column=XR.toXRRecord(M.defaultMoment({form:'column',geometry:{diameter:2.4,height:18},content:{type:'text',text:'Column'}}));
+ assert.equal(column.supported,true);assert.equal(column.record.kind,'column');assert.equal(column.record.width_m,2.4);assert.equal(column.record.height_m,18);
+ const trajectory=XR.toXRRecord(M.defaultMoment({form:'trajectory'}));assert.equal(trajectory.supported,false);
  const imageOnly=M.defaultMoment({form:'framed-surface',content:{type:'image',text:'',imageUrl:'https://example.com/image.jpg',altText:'A mountain'}});
  const result=XR.toXRRecord(imageOnly);assert.equal(result.supported,true);assert.equal(result.record.imageUrl,'https://example.com/image.jpg');assert.equal(result.record.body,'A mountain');
 });
