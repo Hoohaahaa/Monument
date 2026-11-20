@@ -3,7 +3,8 @@
 ## Status · 2026-11-20
 - **Camera passthrough:** DEVICE PASS on Samsung Galaxy A32 4G (SM-A325F); movement/rotation and STOP/restart work.
 - **Geospatial:** device reports Earth Tracking PAUSED + ERROR_NOT_AUTHORIZED; precise location confirmed enabled.
-- **App-side authorization fix:** play-services-auth added for ARCore Keyless authorization; build/device verification pending.
+- **App-side authorization fix:** play-services-auth added for ARCore Keyless authorization.
+- **Diagnostic APK:** next build is version 0.2.1; artifact will include the APK signing-certificate SHA-1.
 - **Product UI:** approved camera-first web shell; Camera / Place / Create / Publish.
 - **Native three-button screen:** diagnostic only.
 
