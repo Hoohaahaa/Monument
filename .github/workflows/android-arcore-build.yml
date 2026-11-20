@@ -62,3 +62,5 @@ jobs:
           path: android/app/build/outputs/apk/debug/
           if-no-files-found: error
           retention-days: 7
+
+# Cache verification run: ensure subsequent builds restore the same development keystore.
