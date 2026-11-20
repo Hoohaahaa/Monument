@@ -124,7 +124,7 @@ class MainActivity : Activity() {
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
-                    val js = "document.documentElement.style.background='transparent';document.body.style.background='transparent';const s=document.querySelector('.shell');if(s)s.style.background='transparent';const st=document.querySelector('.stage');if(st)st.style.background='transparent';const c=document.querySelector('.camera');if(c)c.style.background='transparent';const p=document.getElementById('placeholder');if(p)p.style.display='none';const v=document.getElementById('video');if(v)v.style.display='none';const h=document.getElementById('hud');if(h)h.style.display='block';"
+                    val js = "document.documentElement.style.background='transparent';document.body.style.background='transparent';const s=document.querySelector('.shell');if(s)s.style.background='transparent';const st=document.querySelector('.stage');if(st)st.style.background='transparent';const c=document.querySelector('.camera');if(c)c.style.background='transparent';window.addEventListener('monument:arcore',e=>{const d=e&&e.detail?e.detail:{};const s=document.getElementById('geoStatus');if(s&&d.message)s.textContent=d.message.replace(/\\n/g,' · ');});"
                     evaluateJavascript(js, null)
                 }
             }
