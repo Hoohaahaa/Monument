@@ -72,7 +72,11 @@ class CameraBackgroundRenderer(
 
     fun setGeospatialEnabled(value: Boolean) {
         geospatialEnabled = value
-        vpsCheckStarted = false
+        vpsRequestId += 1
+        vpsCheckInFlight = false
+        vpsLastCheckAt = 0L
+        vpsLastLatitude = Double.NaN
+        vpsLastLongitude = Double.NaN
         vpsAvailability = "NOT CHECKED"
         lastGeoStatusAt = 0L
     }
