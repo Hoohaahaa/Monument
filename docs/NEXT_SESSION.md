@@ -65,3 +65,26 @@ Last updated: 2026-11-20
 ## Recent commits
 - Geospatial diagnostic field reference and physical tracking milestone documented earlier.
 - VPS persistence fix: `766d6850a18f99007a4bb7f5f3fd994b3b2e4482`.
+
+
+## Latest VPS refresh build — 2026-11-20
+- Build #39 succeeded: [GitHub Actions](https://github.com/Hoohaahaa/Monument/actions/runs/44724045833).
+- Run ID: `44724045833`; commit: `669d40e175474630c1a119d054af624dc731b030`.
+- Artifact: `monument-camera-passthrough-debug`; artifact ID `14623331612`.
+- APK extracted and verified at `/mnt/data/monument-build39/app-debug.apk` in the assistant's active runtime. Package `dev.monomatter.monument`, versionName `0.2.1`, versionCode `3`.
+- Signing SHA-1 remains `eb565d1f058175eeb0a5c0c4d7233d99bade6867`, same stable CI signing key used for OAuth.
+- Build #38 failed during Gradle build on the intermediate commit; #39 includes both VPS refresh commits and succeeded.
+- User reported `VPS: UNAVAILABLE` in Iran and tried another nearby outdoor area, but cannot currently travel for further testing. Do not ask them to relocate.
+- New build rechecks VPS after >=100 m reported location change or every 5 minutes, whichever occurs first; prevents concurrent requests and ignores stale callbacks after session/mode reset.
+- User should install build #39 when convenient. Next report should capture exact `VPS:` enum and H/V/yaw readings; do not claim this fixes Google VPS regional coverage.
+
+## Approved positioning architecture (product decision)
+- Three layers are required as a permanent Monument architecture, not a temporary workaround:
+  1. Global visual-geospatial: ARCore Geospatial with VPS when available.
+  2. Device-local: GNSS/GPS + visual-inertial tracking and device sensors.
+  3. Local reference / assisted anchoring: local calibration/reference target for precision-sensitive relative placement; technology intentionally undecided.
+- Maintain source provenance, timestamps, uncertainty, coordinate-frame transforms, and anchor scope (global/device/local).
+- Use rolling confidence states; no placement may be called precise based on `TRACKING` alone.
+- VPS is optional; absence must degrade capability/precision gracefully, not block Monument globally.
+- Iran is the current test region. Region-specific VPS coverage, network access, authorization, and device/service compatibility must be diagnosed separately; do not assume one is the cause.
+- Full architecture and confidence policy are documented in `docs/GEOSPATIAL_DIAGNOSTICS.md`.
