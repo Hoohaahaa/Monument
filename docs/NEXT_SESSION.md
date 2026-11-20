@@ -47,7 +47,7 @@ Last updated: 2026-11-20
 - VPS availability is a separate location-level availability check. It is not proof that a live VPS localization fix is currently being used.
 
 ## Next steps, in order
-1. Build the current VPS-diagnostic fix in CI; confirm success and retrieve the APK.
+1. **Complete:** Build #42 succeeded and its APK was retrieved and verified; see the Build #42 section below.
 2. User installs it and reports the exact `VPS:` result plus H/V/yaw accuracy ranges after standing still and while moving.
 3. Add a short rolling stability window / quality state (e.g. acquiring, approximate, stable) with thresholds selected from field evidence, not arbitrary guesses.
 4. Implement transparent Android WebView compositor above the ARCore camera, preserving the approved web app and avoiding a second browser camera stream.
@@ -107,7 +107,7 @@ Last updated: 2026-11-20
 - Exact ARCore result enum names remain visible so UNAVAILABLE is distinguishable from network/auth/resource errors; synchronous thrown exceptions show a separate request-error label.
 - Coordinates are rounded to 3 decimal places for the on-device diagnostic line; no location history is uploaded or persisted by this renderer.
 - Source commits: `3130fb45e65e49762b6ea942d2bff96346b9041e`, `3714b58c50a8228ad90e9b7c9313287150300512`, `134a424a328f8017b33dbe786264ba2ad812361f`.
-- Latest build #42 for commit `134a424a328f8017b33dbe786264ba2ad812361f` is in progress. Verify its final CI result and artifact before sharing another APK.
+- Build #42 for commit `134a424a328f8017b33dbe786264ba2ad812361f` is **successful**; artifact `14627550889` was downloaded and APK identity/signature verified. See the latest delivery section below.
 - User's >=100 m movement test remains pending and is not required immediately.
 
 ## Build #42 is complete — latest verified APK (2026-11-20)
