@@ -57,3 +57,12 @@ This file records accepted decisions and rejected paths so future sessions do no
 **Not yet established:** Geospatial mode support/configuration on this device, Earth TRACKING, VPS coverage or authorization, Depth, stable world-locked anchors, or any completed spatial rendering. A VPS `ERROR_NOT_AUTHORIZED` result must be treated as cloud app/project authorization, not as no VPS coverage.
 
 **UI constraint:** The current native OPEN CAMERA / STOP / OPEN EDITOR screen is a temporary diagnostic shell. It is not the final Monument interface. Preserve the approved one-page camera-first shell and its Camera / Place / Create / Publish actions; next UI work must compose it transparently over the native camera rather than keep or polish the mock native screen.
+
+
+## 2026-11-20 — Preserve the approved Monument UI; native controls are diagnostic only
+
+**Decision:** The native three-button OPEN CAMERA / STOP / OPEN EDITOR screen is a temporary engineering diagnostic, not the final app interface. The product UI remains the approved one-page camera-first Monument shell with Camera / Place / Create / Publish actions.
+
+**Next implementation:** Compose the existing web UI transparently above the native ARCore camera, connect it through a versioned native bridge, and ensure native-hosted mode does not start a second browser camera stream. Track in [Issue #21](https://github.com/Hoohaahaa/Monument/issues/21).
+
+**Not selected:** Rebuild Monument as a separate native-only interface. Reason: it would discard the accepted shell and duplicate the product rather than add native camera/geospatial capability to the same experience.
