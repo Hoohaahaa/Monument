@@ -46,3 +46,14 @@ This file records accepted decisions and rejected paths so future sessions do no
 **Scope of evidence:** This is a user-reported device result, not a CI inference. It does not by itself establish sustained frame stability during phone movement, STOP/restart reliability, ARCore Geospatial support, VPS availability/accuracy, Depth support, world-locked anchors, or a complete AR experience. Keep those as separate validation gates.
 
 **Next:** Validate stable live frames while moving/rotating the phone and STOP -> OPEN CAMERA restart; then implement runtime Geospatial/VPS diagnostics.
+
+
+## 2026-11-20 — Camera runtime accepted; Geospatial diagnostics next
+
+**Physical device result:** User confirms the rear camera remains live and smooth while moving/rotating the Samsung Galaxy A32 4G (SM-A325F), and STOP/restart works. Camera runtime acceptance is closed.
+
+**Next implementation:** Add a privacy disclosure and precise-location permission flow; check `Session.isGeospatialModeSupported` before enabling `Config.GeospatialMode.ENABLED`; report Earth tracking/state and WGS84 camera pose with horizontal, vertical and yaw accuracy; query VPS asynchronously at the localized camera position.
+
+**Not yet established:** Geospatial mode support/configuration on this device, Earth TRACKING, VPS coverage or authorization, Depth, stable world-locked anchors, or any completed spatial rendering. A VPS `ERROR_NOT_AUTHORIZED` result must be treated as cloud app/project authorization, not as no VPS coverage.
+
+**UI constraint:** The current native OPEN CAMERA / STOP / OPEN EDITOR screen is a temporary diagnostic shell. It is not the final Monument interface. Preserve the approved one-page camera-first shell and its Camera / Place / Create / Publish actions; next UI work must compose it transparently over the native camera rather than keep or polish the mock native screen.
