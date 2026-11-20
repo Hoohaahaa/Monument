@@ -77,6 +77,7 @@ class CameraBackgroundRenderer(
         vpsRequestId += 1
         vpsCheckInFlight = false
         vpsLastCheckAt = 0L
+        vpsLastResultAt = 0L
         vpsLastLatitude = Double.NaN
         vpsLastLongitude = Double.NaN
         vpsAvailability = "NOT CHECKED"
