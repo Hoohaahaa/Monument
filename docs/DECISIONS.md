@@ -74,3 +74,12 @@ This file records accepted decisions and rejected paths so future sessions do no
 **Not selected:** Make VPS the sole positioning engine, block the app or all publishing when VPS is unavailable, or switch engines merely to work around one UNAVAILABLE result. Reason: coverage is location-specific; Geospatial may operate with GPS and Monument has a separately approved local-reference layer.
 
 **Build verification:** Build #42 succeeded on commit 134a424a328f8017b33dbe786264ba2ad812361f; APK artifact 14627550889 is verified. User has not yet installed it or confirmed its on-device VPS output. The earlier UNAVAILABLE report does not verify the latest re-query diagnostics.
+
+
+## 2026-11-20 — Do not require repeated field relocation to diagnose VPS
+
+**Field evidence:** User reports a fresh `UNAVAILABLE · CURRENT` result after moving; query age was approximately 90 seconds. This does not prove VPS is globally unavailable, and it only proves the exact queried coordinate is unavailable if it matches the latest pose. The diagnostic suffix `@lat, lon` is the query point (latitude first), rounded to 3 decimals. `CURRENT` means query age under five minutes, not current-place validation.
+
+**Decision:** Do not ask the user to keep moving around. Expose the distance between the last queried coordinate and latest tracked ARCore pose, show pose age, and add a deliberate manual recheck action with a cooldown. If a manual recheck at the current pose returns a fresh UNAVAILABLE and query-to-pose distance is small, mark that spot as VPS-uncovered and move on to the approved GPS/visual-inertial and local-reference layers. Investigate auth/network only for explicit error enums.
+
+**Not selected:** Shorten the automatic 100 m threshold aggressively or poll continuously. Reason: it can create unnecessary requests/quota use and still does not clarify whether the query point matched the current pose. A user-triggered recheck is explicit and rate-limited.
