@@ -4,19 +4,22 @@ import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.view.Surface
-import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.Coordinates2d
+import com.google.ar.core.Earth
 import com.google.ar.core.Frame
 import com.google.ar.core.Session
+import com.google.ar.core.TrackingState
+import com.google.ar.core.exceptions.CameraNotAvailableException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import java.util.Locale
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 /**
- * Minimal ARCore camera passthrough renderer.
- * The ARCore Session is updated only from GLSurfaceView.Renderer.onDrawFrame.
+ * ARCore camera passthrough plus runtime Geospatial diagnostics.
+ * No product UI, terrain, or world-anchored surfaces are drawn in this milestone.
  */
 class CameraBackgroundRenderer(
     private val onStatus: (String) -> Unit
@@ -24,6 +27,7 @@ class CameraBackgroundRenderer(
     @Volatile private var session: Session? = null
     @Volatile private var displayRotation: Int = Surface.ROTATION_0
     @Volatile private var displayGeometryDirty = true
+    @Volatile private var geospatialEnabled = false
 
     private var textureId = -1
     private var program = 0
@@ -34,6 +38,8 @@ class CameraBackgroundRenderer(
     private var surfaceWidth = 1
     private var surfaceHeight = 1
     private var lastStatusAt = 0L
+    private var lastGeoStatusAt = 0L
+    private var vpsCheckStarted = false
 
     private val quadVertices = directBuffer(floatArrayOf(
         -1f, -1f, 1f, -1f,
@@ -41,7 +47,7 @@ class CameraBackgroundRenderer(
     ))
     private val quadTexCoords = directBuffer(floatArrayOf(
         0f, 1f, 1f, 1f,
-        0f, 0f, 1f, 0f
+        0f, 0f, 0f, 0f
     ))
     private val transformedTexCoords = FloatArray(8)
 
@@ -49,6 +55,14 @@ class CameraBackgroundRenderer(
     fun setSession(value: Session?) {
         session = value
         textureBound = false
+        vpsCheckStarted = false
+        lastGeoStatusAt = 0L
+    }
+
+    fun setGeospatialEnabled(value: Boolean) {
+        geospatialEnabled = value
+        vpsCheckStarted = false
+        lastGeoStatusAt = 0L
     }
 
     fun setDisplayRotation(rotation: Int) {
@@ -101,7 +115,11 @@ class CameraBackgroundRenderer(
 
             if (frame.timestamp != 0L) {
                 drawCameraBackground()
-                publishStatus(frame)
+                if (geospatialEnabled) {
+                    publishGeospatialStatus(active)
+                } else {
+                    publishCameraStatus(frame)
+                }
             } else {
                 publishWaitingStatus()
             }
@@ -112,6 +130,67 @@ class CameraBackgroundRenderer(
             onStatus("ARCore frame error: ${e.javaClass.simpleName}: ${e.message ?: "unknown"}")
         }
     }
+
+    private fun publishGeospatialStatus(active: Session) {
+        val now = System.currentTimeMillis()
+        if (now - lastGeoStatusAt < 1500L) return
+        lastGeoStatusAt = now
+
+        val earth: Earth = active.earth
+        val earthTracking = earth.trackingState
+        val earthState = earth.earthState
+        if (earthTracking != TrackingState.TRACKING) {
+            onStatus("MONUMENT / GEOLOCALIZATION\nEarth: ${earthTracking.name} · State: ${earthState.name}\nWaiting for a valid global pose…")
+            return
+        }
+
+        val pose = earth.cameraGeospatialPose
+        val lat = pose.latitude
+        val lon = pose.longitude
+        val altitude = pose.altitude
+        val horizontal = pose.horizontalAccuracy
+        val vertical = pose.verticalAccuracy
+        val yawAccuracy = pose.orientationYawAccuracy
+
+        onStatus(
+            String.format(
+                Locale.US,
+                "MONUMENT / GEOLOCALIZATION\nEarth: TRACKING · WGS84/EUS\n%.6f°, %.6f° · %.1f m ellipsoid\nH ±%.1f m · V ±%.1f m · yaw ±%.1f°",
+                lat, lon, altitude, horizontal, vertical, yawAccuracy
+            )
+        )
+
+        if (!vpsCheckStarted) {
+            vpsCheckStarted = true
+            try {
+                active.checkVpsAvailabilityAsync(lat, lon) { result ->
+                    onStatus("MONUMENT / VPS\nAvailability: ${result.name}")
+                }
+            } catch (error: Exception) {
+                onStatus("MONUMENT / VPS\nCheck failed: ${error.javaClass.simpleName}")
+            }
+        }
+    }
+
+    private fun publishWaitingStatus() {
+        val now = System.currentTimeMillis()
+        if (now - lastStatusAt < 1200L) return
+        lastStatusAt = now
+        onStatus("MONUMENT / RUNTIME\nWaiting for first camera frame…")
+    }
+
+    private fun publishCameraStatus(frame: Frame) {
+        val now = System.currentTimeMillis()
+        if (now - lastStatusAt < 1200L) return
+        lastStatusAt = now
+        onStatus("MONUMENT / RUNTIME\nCamera: LIVE · AR tracking: ${frame.camera.trackingState.name}")
+    }
+
+    private fun directBuffer(values: FloatArray): FloatBuffer =
+        ByteBuffer.allocateDirect(values.size * 4)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer()
+            .apply { put(values); position(0) }
 
     private fun createCameraTexture() {
         val textures = IntArray(1)
@@ -144,26 +223,6 @@ class CameraBackgroundRenderer(
         GLES20.glDepthMask(true)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
     }
-
-    private fun publishWaitingStatus() {
-        val now = System.currentTimeMillis()
-        if (now - lastStatusAt < 1200L) return
-        lastStatusAt = now
-        onStatus("MONUMENT / CAMERA\\nWaiting for first camera frame…")
-    }
-
-    private fun publishStatus(frame: Frame) {
-        val now = System.currentTimeMillis()
-        if (now - lastStatusAt < 1200L) return
-        lastStatusAt = now
-        onStatus("MONUMENT / CAMERA\nLive camera: ON  •  AR tracking: ${frame.camera.trackingState.name}")
-    }
-
-    private fun directBuffer(values: FloatArray): FloatBuffer =
-        ByteBuffer.allocateDirect(values.size * 4)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer()
-            .apply { put(values); position(0) }
 
     private fun createProgram(vertexSource: String, fragmentSource: String): Int {
         val vertex = compileShader(GLES20.GL_VERTEX_SHADER, vertexSource)
