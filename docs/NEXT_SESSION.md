@@ -109,3 +109,33 @@ Last updated: 2026-11-20
 - Source commits: `3130fb45e65e49762b6ea942d2bff96346b9041e`, `3714b58c50a8228ad90e9b7c9313287150300512`, `134a424a328f8017b33dbe786264ba2ad812361f`.
 - Latest build #42 for commit `134a424a328f8017b33dbe786264ba2ad812361f` is in progress. Verify its final CI result and artifact before sharing another APK.
 - User's >=100 m movement test remains pending and is not required immediately.
+
+## Build #42 is complete — latest verified APK (2026-11-20)
+
+- **Build #42 succeeded**: https://github.com/Hoohaahaa/Monument/actions/runs/44732497825
+- Built commit: 134a424a328f8017b33dbe786264ba2ad812361f.
+- Artifact ID: 14627550889, name: monument-camera-passthrough-debug.
+- Verified APK path in the assistant runtime: /mnt/data/monument-build42/app-debug.apk.
+- Package: dev.monomatter.monument; versionName 0.2.1; versionCode 3.
+- Signing SHA-1: eb565d1f058175eeb0a5c0c4d7233d99bade6867, matches the known OAuth fingerprint. User can install over the earlier app; do not ask them to uninstall first unless Android reports a signature conflict.
+- This build includes persistent VPS query provenance diagnostics: exact enum, CURRENT/STALE freshness, query/result age, pending state, privacy-rounded query coordinates, separate request exception display, reset metadata on Session/Geospatial mode changes, and stale callback protection.
+- User has not yet confirmed installation or read the new VPS line. Earlier UNAVAILABLE report is not proof that build #42's refreshed query returned UNAVAILABLE.
+
+## Highest-quality VPS strategy — preserve this direction
+
+- Goal is the **best reliable global positioning quality available**, not “VPS at any cost” and not making Monument VPS-dependent.
+- VPS is the preferred global visual-localization enhancer when coverage exists; it is especially valuable where GNSS is weak. Google documents typical VPS-covered performance as better than 5 m and often around 1 m position, with rotational accuracy better than 5 degrees; these are typical, not guaranteed. Clear-sky outdoor GPS may be sufficient in some cases. Official references: https://developers.google.com/ar/reference/c/group/ar-config and https://developers.google.com/ar/develop/geospatial.
+- Distinguish five independent checks: (1) app/device support, (2) Cloud API + OAuth authorization, (3) network/service errors, (4) VPS coverage at the exact queried coordinate, and (5) live pose convergence/accuracy. Never collapse them into one “VPS failed” status.
+- For a future VPS-covered field session, let ARCore converge and slowly scan visually rich, static, well-lit surroundings that are likely represented in Street View. This may help visual matching but cannot create coverage where none exists.
+- The real Monument quality gate is rolling live H/V/yaw uncertainty and stability, not the VPS enum alone. ARCore accuracy values are 68% confidence uncertainty estimates; lower is better. Derive thresholds per use case from real field data.
+- Use WGS84 anchors for ellipsoid-height global points, Terrain anchors for height relative to terrain, and Rooftop anchors for height relative to a building roof. Do not mix altitude semantics.
+- Preserve the local-reference layer for precision-sensitive repeatable placement. If the requirement exceeds ARCore's demonstrated accuracy, investigate surveyed references / calibration targets and, only if justified, RTK/survey-grade input. Never promise centimetre accuracy from VPS.
+- Rejected direction: pause all work until VPS is AVAILABLE. Reason: VPS is location-specific and not required for all Geospatial or local-reference workflows. Continue the native/WebView compositor and spatial contract in parallel.
+- User does not need to travel or test immediately. When convenient, install build #42 and simply read the VPS diagnostic line; the >=100 m re-query validation can wait.
+
+## Current next actions for the assistant
+
+1. Share the verified build #42 APK link; no user action is urgent.
+2. When the user has time, collect the exact on-device VPS line plus H/V/yaw ranges; do not ask for another location trip.
+3. Continue implementation independently: inspect MainActivity, renderer, manifest/Gradle, index.html, app JS/CSS, and engine/native-arcore-bridge.js; then implement the transparent WebView compositor and versioned native bridge while preserving the approved camera-first UI and native ARCore camera. Avoid a second browser getUserMedia() stream.
+4. Update this handoff and decision log after each meaningful implementation choice, including alternatives not selected and why.
