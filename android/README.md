@@ -1,39 +1,42 @@
-# Monument Android Runtime
+# Monument Android build and test notes
 
-## Status · 2026-11-20
-- **Camera passthrough:** DEVICE PASS on Samsung Galaxy A32 4G (SM-A325F); movement/rotation and STOP/restart work.
-- **Geospatial:** device reports Earth Tracking PAUSED + ERROR_NOT_AUTHORIZED; precise location confirmed enabled.
-- **App-side authorization fix:** play-services-auth added for ARCore Keyless authorization.
-- **Build #25:** v0.2.1 APK compiled successfully; artifact includes signing certificate SHA-1. APK SHA-256: 782d3d4f52be86a94ed6dfa65c1ba5f26b54a779ad12d7c3fbcdb159f3676b44.
-- **Build #25 signing SHA-1:** d0579bf2632ffe7fbe7cd019765a02dadc4510ff. This is the first-run CI debug signer and is superseded by the stable cached signer build.
-- **Signing stability:** workflow now caches ~/.android/debug.keystore under monument-android-debug-signing-v1; next successful build seeds a stable development certificate for subsequent CI builds.
-- **Product UI:** approved camera-first web shell; Camera / Place / Create / Publish.
-- **Native three-button screen:** diagnostic only.
+## Current build state — 2026-11-20
+- Package: `dev.monomatter.monument`
+- Current app version: `0.2.1` (versionCode 3)
+- Build #29 succeeded but its signing key was not persisted; do not use its SHA-1 for OAuth.
+- Build #30 failed because it used the older workflow revision and could not find `android/debug.keystore`.
+- Build #31 succeeded with the explicit development keystore creation step.
+- Build #31 signer SHA-1: `eb565d1f058175eeb0a5c0c4d7233d99bade6867`.
+- Build #31 artifact: `monument-camera-passthrough-debug` (artifact ID 14617565324).
+- A subsequent build must show a cache hit and exactly the same SHA-1 before OAuth registration.
+- Never register SHA-1 from builds #25–#30.
 
-## Short path
-1. **Camera v0.2.0 — PASS:** native ARCore + GLES external OES.
-2. **Geospatial diagnostics — BUILT:** consent, runtime support check, Earth state, WGS84 pose, VPS callback.
-3. **Device test — BLOCKED:** ERROR_NOT_AUTHORIZED; precise location is not the cause.
-4. **App fix — COMMITTED:** include play-services-auth for keyless ARCore authorization.
-5. **CI signing — IN PROGRESS:** preserve the development debug certificate across runs; use the SHA-1 from the first successful cached-signer build.
-6. **Cloud setup — REQUIRED:** enable ARCore API; create Android OAuth client for package dev.monomatter.monument and SHA-1 of the stable APK signing certificate.
-7. **Retest:** Earth State ENABLED, Earth Tracking TRACKING, valid pose/accuracy, then VPS result.
-8. **Next product milestone:** transparent WebView compositor + versioned native bridge (Issue #21).
-9. **Later:** first-person terrain, contours, labels and world-anchored Surfaces.
+## Build and signing design
+The CI workflow caches `android/debug.keystore` under the fixed key `monument-android-debug-signing-v2`. Gradle's debug signing config explicitly uses this file. If the cache is empty, CI generates a development-only keystore and the successful job should save it for the next run.
 
-## Authorization notes
-- Google prefers Keyless authorization; an API key is optional.
-- Keyless authorization requires the play-services-auth library and an OAuth 2.0 Android client matching the app package name and signing-certificate SHA-1.
-- ERROR_NOT_AUTHORIZED may mean ARCore API is disabled in the wrong/no Cloud project, or the OAuth package/SHA-1 does not match. It does not prove VPS is unavailable.
-- Do not read cameraGeospatialPose until Earth Tracking is TRACKING.
-- Build success is compile evidence, not physical-device acceptance.
-- CI development key is for test APKs only; never reuse it for production/Play signing.
+## Google Cloud authorization
+- ARCore API is already enabled in Cloud project `monument-515308`.
+- OAuth Android client is not yet created.
+- Required package: `dev.monomatter.monument`.
+- Required SHA-1: only the stable fingerprint confirmed by two sequential CI builds.
+- Use OAuth 2.0 client ID, Android application type. Do not create an API key for this Keyless flow.
 
-## Guardrails
-- Do not repeat the passed camera test or precise-location permission check.
-- Preserve the approved web UI and four actions; do not promote the diagnostic shell.
-- Never change production Vercel aliases without explicit approval.
+## Physical device state
+- Device: Samsung Galaxy A32 4G (SM-A325F).
+- Native ARCore camera passthrough test passed; do not repeat.
+- Precise location permission is already enabled.
+- Previous Geospatial result: Earth Tracking PAUSED, VPS ERROR_NOT_AUTHORIZED.
+- After OAuth creation and APK install, retest for Earth Tracking TRACKING and valid global pose.
 
-## CI signing cache verification
-- Two completed builds (#27 and #28) produced different debug signing SHA-1 fingerprints; neither fingerprint is approved for OAuth registration.
-- A follow-up build is required after the cache has settled. Compare its certificate SHA-1 with the preceding build before treating the cache as stable.
+## Product implementation boundary
+- Existing approved web shell remains the target UI: Camera / Place / Create / Publish.
+- Native ARCore owns camera, session and tracking.
+- Transparent WebView compositor and versioned native JS bridge are still outstanding (Issue #21).
+- Current APK is diagnostic camera/Geospatial groundwork, not yet the finished Monument UI.
+
+## Next steps
+1. Confirm stable signing cache with another successful build.
+2. Provide user a step-by-step Google Cloud OAuth Android client guide using the confirmed SHA-1.
+3. Build and provide APK; user installs on A32.
+4. Verify Earth Tracking and VPS.
+5. Implement transparent WebView compositor and connect the approved UI.
