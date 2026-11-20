@@ -21,8 +21,9 @@
 3. Camera launch, smooth movement/rotation, and STOP/restart are user-confirmed on the physical SM-A325F. Do not ask the user to repeat these checks.
 4. Current branch adds a privacy disclosure, precise-location permission flow, runtime Geospatial support check, WGS84 camera pose accuracy readout, and async VPS availability result. Verify the latest CI run before distributing the APK.
 5. On device, record whether Geospatial mode configures, Earth reaches TRACKING, the pose accuracies, and the VPS result. If VPS reports NOT_AUTHORIZED, configure the ARCore Cloud API project/app authorization; do not mislabel this as no coverage.
-6. Once native pose is validated, implement the transparent camera compositor and restore the approved Monument camera-first UI (Camera / Place / Create / Publish). The current native buttons/status panel are a temporary diagnostic shell, not product design.
+6. Transparent camera compositor and restoration of the approved UI are tracked in [Issue #21](https://github.com/Hoohaahaa/Monument/issues/21). Preserve Camera / Place / Create / Publish. The current native buttons/status panel are temporary diagnostics, not product design.
 7. Then feed pose into first-person Earth/terrain and Surface engine; evaluate multi-resolution terrain/contours.
+8. CI run #17 (44699284248) first failed during Gradle dependency resolution with many unrelated artifacts unavailable from configured repositories; this looked like a transient repository/network resolution failure, not a Kotlin compile diagnostic. Failed job was re-run as attempt 2. Check latest status before sharing any APK.
 
 ## Never do
 
