@@ -57,7 +57,7 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Build artifact monument-arcore-probe-debug (artifact ID 14610956314) was installed and launched by the user on the target phone.
 - User acceptance result: FAIL — no camera image, no camera passthrough, and no visible AR experience. The app launched into a WebView/editorial workflow instead.
 - This result supersedes any assumption that a successful CI build means the Android experience works. Do not distribute this same artifact again as a camera build.
-- Required next release: a new APK with an actual GL-rendered ARCore camera background and transparent Monument overlay. Build/CI success is only a compile gate; user device confirmation remains required.
+- Required next release: a new APK with an actual GL-rendered ARCore camera background. Transparent Monument overlay is deferred until camera passthrough is accepted. Build/CI success is only a compile gate; user device confirmation remains required.
 
 ## Current native camera runtime — v0.2.0 (2026-11-20)
 - Version code 2 / version name 0.2.0.
@@ -74,7 +74,8 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Tracking issue: https://github.com/Hoohaahaa/Monument/issues/20
 
 ## Build history
-- v0.2.0 camera passthrough workflow run #10: https://github.com/Hoohaahaa/Monument/actions/runs/44698143221 — triggered by commit a16039a14d16ec0ec1c7547c8c5450978c58a4d3; status was in_progress at the time of the last check. Confirm final status and artifact before distributing.
+- v0.2.0 camera passthrough workflow run #12: https://github.com/Hoohaahaa/Monument/actions/runs/44698291433 — triggered by final renderer status commit 4b5818e96ad5e17ec29d7195f0dbac8de5bd4e48; status was queued at the time of the last check. Confirm final status and artifact before distributing.
+- Intermediate CI run #6 failed at Kotlin compile: wrong CameraNotAvailableException package and stale probe MainActivity references to JSONObject. Fixed by importing com.google.ar.core.exceptions.CameraNotAvailableException and replacing the old WebView probe Activity with the native camera-first Activity. Do not treat that failed run as the current code result.
 - Expected artifact name: monument-camera-passthrough-debug. No new APK should be sent until this run succeeds and the artifact is verified.
 - Workflow: `.github/workflows/android-arcore-build.yml`
 - Workflow builds Debug APK using JDK 17 and Gradle 8.9; uploads artifact for 7 days.
@@ -85,7 +86,7 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Artifact ID: `14610956314`
 - Artifact size: 3,190,719 bytes ZIP; APK inside is 3,938,017 bytes.
 - APK was downloaded and extracted in the assistant working runtime at `/mnt/data/monument-arcore-probe/app-debug.apk`. This is a verified path for the current session only; do not reuse it in another session without checking.
-- APK has compiled successfully but has NOT been installed or run on a physical device. No Geospatial/Depth support result is known yet.
+- v0.1.0 probe APK WAS installed and launched on the user's physical SM-A325F and failed camera acceptance (no live camera feed). This result is recorded above. No v0.2.0 physical-device test has happened yet. No Geospatial/Depth support result is known yet.
 
 ## Open work / next steps
 1. Check workflow run #10 and fix any compile/build failure. Verify the produced v0.2.0 APK artifact before sharing.
@@ -120,4 +121,4 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Every future path not selected must be recorded here with rationale; create/update GitHub issues for untracked work.
 
 ## Continuity instructions for future chats / agents
-Read this file, `docs/NEXT_SESSION.md`, `docs/DECISIONS.md`, `docs/product/FIRST_PERSON_GEOSPATIAL_PRODUCT_DIRECTION.md`, `android/README.md`, and open issues #17, #19 and #20 before changing architecture. Continue from the current branch; inspect actual repository state and workflow runs. Do not claim implementation, tests, deployment or physical-device behavior unless verified. Update this document after each material change and include commit SHA, workflow run, artifacts, tests, device observations and next exact action. Keep explanations concise and provide working outputs, not only plans.
+Read this file, `docs/NEXT_SESSION.md`, `docs/DECISIONS.md`, `docs/product/FIRST_PERSON_GEOSPATIAL_PRODUCT_DIRECTION.md`, `android/README.md`, and open issues #17, #19 and #20 before changing architecture. At the start of every new Monument chat, do this automatically; do not ask the user to remind you. Continue from the current branch; inspect actual repository state and workflow runs. Do not claim implementation, tests, deployment or physical-device behavior unless verified. Update this document after each material change and include commit SHA, workflow run, artifacts, tests, device observations and next exact action. Keep explanations concise and provide working outputs, not only plans.
