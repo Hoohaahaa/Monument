@@ -125,6 +125,6 @@ $('title').oninput=()=>{if(!visitor)sync()};$('body').oninput=()=>{if(!visitor)s
 $('share').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);status('Visitor link copied.')}catch{status('Copy the visitor URL from the browser address bar.')}};
 const h=location.hash.startsWith('#moment=')?dec(location.hash.slice(8)):dec(location.hash.slice(1));
 if(h&&h.schemaVersion===M.VERSION&&M.validateMoment(h).valid)visitorView(h);else{try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.schemaVersion===M.VERSION)moment=d}catch{}addControls();fillForm();status('CAMERA READY · TAP OPEN CAMERA TO START')}
-window.addEventListener('pagehide',()=>{stream?.getTracks().forEach(t=>t.stop());window.MONUMENT_GEO_CAMERA?.stop();window.MONUMENT_EARTH?.hide();window.MONUMENT_CAMERA_STREAM=null});
+window.addEventListener('pagehide',()=>{if(window.MonumentNativeAR?.available())window.MonumentNativeAR.stop();stream?.getTracks().forEach(t=>t.stop());window.MONUMENT_GEO_CAMERA?.stop();window.MONUMENT_EARTH?.hide();window.MONUMENT_CAMERA_STREAM=null});
 window.MONUMENT_MOMENT={get value(){return moment},saveDraft,publish,validate:()=>M.validateMoment(moment)};
 })();
