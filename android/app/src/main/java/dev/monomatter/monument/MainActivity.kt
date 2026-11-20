@@ -2,178 +2,190 @@ package dev.monomatter.monument
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
-import android.graphics.Color
 import android.view.Gravity
 import android.widget.Button
 import android.widget.FrameLayout
-import android.webkit.JavascriptInterface
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.opengl.GLSurfaceView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Config
 import com.google.ar.core.Session
-import com.google.ar.core.TrackingState
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledFuture
-import java.util.concurrent.TimeUnit
 
-/** Isolated native capability/pose bridge probe. Camera compositing is a separate milestone. */
+/**
+ * Native-first camera entry point.
+ * This milestone proves camera passthrough only; Geospatial anchors and web compositing
+ * remain separate gates and are not represented as implemented here.
+ */
 class MainActivity : Activity() {
-    private lateinit var webView: WebView
+    private lateinit var glView: GLSurfaceView
+    private lateinit var renderer: CameraBackgroundRenderer
+    private lateinit var status: TextView
+    private lateinit var startButton: Button
     private var session: Session? = null
-    private val worker = Executors.newSingleThreadScheduledExecutor()
-    private var pollTask: ScheduledFuture<*>? = null
     private var pendingStart = false
+    private var cameraRequested = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        webView = WebView(this).apply {
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            webChromeClient = WebChromeClient()
-            webViewClient = WebViewClient()
-            addJavascriptInterface(MonumentBridge(), "MonumentAR")
-            loadUrl("https://monument-field-test-m8cu2wxxp-mos-projects-efbc27a5.vercel.app/")
+
+        renderer = CameraBackgroundRenderer { message ->
+            runOnUiThread { status.text = message }
         }
+        renderer.setDisplayRotation(windowManager.defaultDisplay.rotation)
+
+        glView = GLSurfaceView(this).apply {
+            setEGLContextClientVersion(2)
+            preserveEGLContextOnPause = false
+            setRenderer(renderer)
+            renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+        }
+
+        status = TextView(this).apply {
+            text = "MONUMENT / CAMERA\nCamera is idle"
+            textSize = 13f
+            setTextColor(0xFFFFFFFF.toInt())
+            setBackgroundColor(0xB8000000.toInt())
+            setPadding(18, 14, 18, 14)
+        }
+
+        startButton = Button(this).apply {
+            text = "OPEN CAMERA"
+            setOnClickListener { requestAndStartCamera() }
+        }
+
+        val stopButton = Button(this).apply {
+            text = "STOP"
+            setOnClickListener { stopCamera() }
+        }
+
+        val editorButton = Button(this).apply {
+            text = "OPEN EDITOR"
+            setOnClickListener {
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(EDITOR_URL)))
+            }
+        }
+
+        val controls = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(8, 8, 8, 18)
+            addView(startButton, LinearLayout.LayoutParams(0, -2, 1f))
+            addView(stopButton, LinearLayout.LayoutParams(0, -2, 0.55f))
+            addView(editorButton, LinearLayout.LayoutParams(0, -2, 1f))
+        }
+
         val root = FrameLayout(this)
-        root.addView(webView, FrameLayout.LayoutParams(-1, -1))
-        val probeButton = Button(this).apply {
-            text = "START GEOSPATIAL DEVICE CHECK"
-            setTextColor(Color.WHITE)
-            setBackgroundColor(Color.rgb(20, 35, 29))
-            setOnClickListener { startSession() }
-        }
-        val buttonParams = FrameLayout.LayoutParams(-1, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP)
-        buttonParams.setMargins(20, 48, 20, 0)
-        root.addView(probeButton, buttonParams)
+        root.addView(glView, FrameLayout.LayoutParams(-1, -1))
+        val statusParams = FrameLayout.LayoutParams(-1, -2, Gravity.TOP)
+        statusParams.setMargins(12, 36, 12, 0)
+        root.addView(status, statusParams)
+        root.addView(controls, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM))
         setContentView(root)
     }
 
-    inner class MonumentBridge {
-        @JavascriptInterface fun getRuntimeInfo(): String = JSONObject()
-            .put("runtime", "android-native-arcore-probe")
-            .put("bridgeVersion", 1)
-            .put("cameraCompositor", false)
-            .put("status", "probe-ready").toString()
-
-        @JavascriptInterface fun startGeospatial() {
-            runOnUiThread {
-                if (!hasPermissions()) {
-                    pendingStart = true
-                    ActivityCompat.requestPermissions(this@MainActivity,
-                        arrayOf(Manifest.permission.CAMERA),
-                        REQUEST_PERMISSIONS)
-                } else startSession()
-            }
-        }
-
-        @JavascriptInterface fun stopGeospatial() {
-            stopPolling()
-            try { session?.pause() } catch (_: Exception) {}
-            emit(JSONObject().put("type", "state").put("state", "stopped"))
-        }
-    }
-
-    private fun hasPermissions() =
-        ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
-        ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_PERMISSIONS && grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
-            if (pendingStart) startSession()
-        } else emit(JSONObject().put("type", "state").put("state", "permission-denied"))
-        pendingStart = false
-    }
-
-    private fun startSession() {
-        if (!hasPermissions()) {
+    private fun requestAndStartCamera() {
+        if (cameraRequested) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             pendingStart = true
-            ActivityCompat.requestPermissions(this,
-                arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION),
-                REQUEST_PERMISSIONS)
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.CAMERA),
+                REQUEST_CAMERA_PERMISSION
+            )
             return
         }
+        startCameraSession()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != REQUEST_CAMERA_PERMISSION) return
+        val granted = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+        if (granted && pendingStart) {
+            pendingStart = false
+            startCameraSession()
+        } else {
+            pendingStart = false
+            status.text = "Camera permission was not granted. Allow Camera permission and try again."
+        }
+    }
+
+    private fun startCameraSession() {
+        if (cameraRequested) return
         try {
             val installStatus = ArCoreApk.getInstance().requestInstall(this, true)
             if (installStatus == ArCoreApk.InstallStatus.INSTALL_REQUESTED) {
-                emit(JSONObject().put("type", "state").put("state", "arcore-install-requested"))
+                status.text = "Google Play Services for AR is updating. Return and tap OPEN CAMERA again."
                 return
             }
+
             val active = session ?: Session(this).also { session = it }
-            val geoSupported = active.isGeospatialModeSupported(Config.GeospatialMode.ENABLED)
-            val depthSupported = active.isDepthModeSupported(Config.DepthMode.AUTOMATIC)
-            if (!geoSupported) {
-                emit(JSONObject().put("type", "capabilities").put("arcore", true)
-                    .put("geospatial", false).put("depth", depthSupported).put("state", "geospatial-unsupported"))
-                return
-            }
-            val config = active.config
-            config.geospatialMode = Config.GeospatialMode.ENABLED
-            if (depthSupported) config.depthMode = Config.DepthMode.AUTOMATIC
-            active.configure(config)
+            // Keep camera startup independent from Geospatial/VPS and Depth capability.
+            active.configure(Config(active))
             active.resume()
-            emit(JSONObject().put("type", "capabilities").put("arcore", true)
-                .put("geospatial", true).put("depth", depthSupported).put("state", "localizing"))
-            startPolling(active)
+            cameraRequested = true
+            glView.queueEvent { renderer.setSession(active) }
+            startButton.text = "CAMERA ACTIVE"
+            status.text = "MONUMENT / CAMERA\nStarting ARCore camera feed…"
         } catch (e: Exception) {
-            emit(JSONObject().put("type", "error").put("message", e.javaClass.simpleName + ": " + (e.message ?: "unknown")))
+            cameraRequested = false
+            status.text = "Could not start camera: ${e.javaClass.simpleName}: ${e.message ?: "unknown error"}"
         }
     }
 
-    private fun startPolling(active: Session) {
-        stopPolling()
-        pollTask = worker.scheduleAtFixedRate({
-            try {
-                val frame = active.update()
-                val earth = active.earth
-                if (earth == null || earth.trackingState != TrackingState.TRACKING) {
-                    emit(JSONObject().put("type", "pose").put("tracking", false)
-                        .put("earthState", earth?.earthState?.name ?: "UNAVAILABLE"))
-                    return@scheduleAtFixedRate
+    private fun stopCamera() {
+        cameraRequested = false
+        try { session?.pause() } catch (_: Exception) {}
+        glView.queueEvent { renderer.setSession(null) }
+        startButton.text = "OPEN CAMERA"
+        status.text = "MONUMENT / CAMERA\nCamera stopped"
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::glView.isInitialized) {
+            renderer.setDisplayRotation(windowManager.defaultDisplay.rotation)
+            if (cameraRequested && session != null) {
+                try {
+                    session?.resume()
+                } catch (e: Exception) {
+                    cameraRequested = false
+                    status.text = "Could not resume camera: ${e.javaClass.simpleName}: ${e.message ?: "unknown"}"
                 }
-                val pose = earth.cameraGeospatialPose
-                emit(JSONObject().put("type", "pose").put("tracking", true)
-                    .put("latitude", pose.latitude).put("longitude", pose.longitude)
-                    .put("altitude", pose.altitude).put("heading", pose.heading)
-                    .put("horizontalAccuracy", pose.horizontalAccuracy)
-                    .put("verticalAccuracy", pose.verticalAccuracy)
-                    .put("headingAccuracy", pose.headingAccuracy)
-                    .put("frameTimestampNs", frame.timestamp))
-            } catch (e: Exception) {
-                emit(JSONObject().put("type", "error").put("message", e.javaClass.simpleName + ": " + (e.message ?: "unknown")))
             }
-        }, 0, 250, TimeUnit.MILLISECONDS)
-    }
-
-    private fun emit(payload: JSONObject) {
-        runOnUiThread {
-            val js = "window.dispatchEvent(new CustomEvent('monument:arcore', {detail: " + payload.toString() + "}));"
-            webView.evaluateJavascript(js, null)
+            glView.onResume()
         }
     }
-
-    private fun stopPolling() { pollTask?.cancel(true); pollTask = null }
 
     override fun onPause() {
-        stopPolling()
         try { session?.pause() } catch (_: Exception) {}
+        if (::glView.isInitialized) glView.onPause()
         super.onPause()
     }
 
     override fun onDestroy() {
-        stopPolling()
+        cameraRequested = false
+        try { session?.pause() } catch (_: Exception) {}
         try { session?.close() } catch (_: Exception) {}
         session = null
-        worker.shutdownNow()
-        webView.removeJavascriptInterface("MonumentAR")
         super.onDestroy()
     }
 
-    companion object { private const val REQUEST_PERMISSIONS = 701 }
+    companion object {
+        private const val REQUEST_CAMERA_PERMISSION = 702
+        private const val EDITOR_URL = "https://monument-field-test-m8cu2wxxp-mos-projects-efbc27a5.vercel.app/"
+    }
 }
