@@ -1,36 +1,45 @@
-# Monument — Next Session Checklist
+# Monument — Next Session
 
-> Read this file together with docs/PROJECT_STATE_AND_HANDOFF.md, docs/DECISIONS.md, and GitHub Issue #20 before making changes. This checklist is the compact entry point for a fresh chat.
+## Current state · 2026-11-20
+- Device: Samsung Galaxy A32 4G · SM-A325F.
+- Camera runtime: **PASS** — live while moving/rotating; STOP/restart works (user-confirmed).
+- Geospatial diagnostic source: **BUILT** — CI run #20 passed; APK artifact verified.
+- Geospatial / Earth tracking / VPS / Depth on device: **NOT TESTED**.
+- Product UI: approved camera-first web shell; actions **Camera / Place / Create / Publish**.
+- Native three-button screen: diagnostic only; do not polish or treat as product UI.
+- Current branch: `feature/android-arcore-geospatial-bridge`.
 
-## Current truth (2026-11-20, updated after device feedback)
+## Latest output
+- Build: [GitHub Actions #20](https://github.com/Hoohaahaa/Monument/actions/runs/44699746664) · SUCCESS.
+- Commit: `442d057e23a12b2d2663c4ebb0656774b785a61f`.
+- Artifact: `monument-camera-passthrough-debug` · ID `14612905251` · 3,937,? bytes (ZIP contains `app-debug.apk`, 3,938,005 bytes).
+- APK: `/mnt/data/monument-geospatial-run20/app-debug.apk` (ChatGPT session path; share link only from the session where verified).
+- Fix: `Session.earth` is nullable (`Earth?`). Added null-safe handling; no longer assigns it to non-null `Earth`.
 
-- Target device: Samsung Galaxy A32 4G, SM-A325F.
-- Previous v0.1.0 probe was installed and launched by the user, but failed acceptance: no live camera appeared; Open Camera led into the web Editorial View flow.
-- The failure is documented in the handoff and Issue #20. Do not ask the user to repeat the old test or configure Editorial View / Publish.
-- New v0.2.0 code adds a native camera-first activity and a GLES/ARCore camera background renderer.
-- New code is committed to feature/android-arcore-geospatial-bridge.
-- Verified camera-passthrough APK: run #10, ID 44698143221, SUCCESS; artifact ID 14611343158. This build contains the core native camera implementation and is ready for A32 testing.
-- Follow-up run #12 (44698291433) succeeded. Geospatial diagnostic implementation is committed. Runs #15–#19 failed at Kotlin compilation because ARCore exposes `Session.earth` as nullable (`Earth?`), while the renderer assigned it to non-null `Earth`. The renderer now handles a null Earth safely and reports `NOT AVAILABLE` rather than crashing/compilation failure. Fix commit: `442d057e23a12b2d2663c4ebb0656774b785a61f`. Run #20 (44699746664) is building this exact commit; verify its result and artifact before sending an APK.
-- Intermediate run #6 failed with compile errors (exception import package and stale MainActivity JSONObject references); both were corrected in later commits. Do not distribute any artifact from those earlier runs.
-- Physical-device feedback: user confirms live camera remains smooth while moving/rotating the Samsung Galaxy A32 4G, and STOP / restart works. Camera runtime acceptance is passed. Geospatial/VPS and Depth remain untested.
+## Short path log
+1. **v0.1.0 · WebView probe → FAIL** — editor opened; no native camera.
+2. **v0.2.0 · Native ARCore camera → PASS** — live feed, movement/rotation, STOP/restart.
+3. **Geospatial diagnostics → CODED** — consent, location permissions, runtime support check, Earth state, WGS84 pose/accuracy, async VPS.
+4. **Build #15–#19 → FAIL** — Kotlin nullability error at `CameraBackgroundRenderer.kt:139`.
+5. **Fix #442d057 → PASS** — null-safe `Session.earth`.
+6. **Build #20 → PASS** — APK artifact `14612905251`.
+7. **Next → DEVICE GEO TEST** — check Geospatial config, Earth TRACKING, pose accuracy, VPS response.
+8. **Then → UI COMPOSITOR** — Issue [#21](https://github.com/Hoohaahaa/Monument/issues/21): transparent WebView over native camera + versioned bridge.
+9. **Then → SPATIAL RENDERER** — first-person terrain, contours, labels, world-anchored Surfaces.
 
-## Immediate sequence
+## Next device check
+Install the newly built diagnostic APK. Accept the Geospatial privacy prompt and precise location permission. Record:
+- Geospatial session enabled / unsupported / failed.
+- Earth state: TRACKING / PAUSED / STOPPED.
+- WGS84 latitude/longitude and altitude.
+- Horizontal / vertical / yaw accuracy.
+- VPS: AVAILABLE / UNAVAILABLE / ERROR_NOT_AUTHORIZED / network error.
 
-1. The run #10 APK is compiled and verified; use artifact ID 14611343158 / monument-camera-passthrough-debug for the first device test. Run #12 is a later diagnostic-text-only build and can be checked separately.
-2. Inspect the source diff for lifecycle, rotation, texture binding, and Session.update() threading before changing more code.
-3. Camera launch, smooth movement/rotation, and STOP/restart are user-confirmed on the physical SM-A325F. Do not ask the user to repeat these checks.
-4. Current branch adds a privacy disclosure, precise-location permission flow, runtime Geospatial support check, WGS84 camera pose accuracy readout, and async VPS availability result. Verify the latest CI run before distributing the APK.
-5. On device, record whether Geospatial mode configures, Earth reaches TRACKING, the pose accuracies, and the VPS result. If VPS reports NOT_AUTHORIZED, configure the ARCore Cloud API project/app authorization; do not mislabel this as no coverage.
-6. Transparent camera compositor and restoration of the approved UI are tracked in [Issue #21](https://github.com/Hoohaahaa/Monument/issues/21). Preserve Camera / Place / Create / Publish. The current native buttons/status panel are temporary diagnostics, not product design.
-7. Then feed pose into first-person Earth/terrain and Surface engine; evaluate multi-resolution terrain/contours.
-8. CI run #17 attempt 2 and runs #18–#19 exposed the actual Kotlin compile error at `CameraBackgroundRenderer.kt:139`: nullable `Session.earth` was assigned to non-null `Earth`. This was fixed in commit `442d057e23a12b2d2663c4ebb0656774b785a61f`; run #20 is the verification build. Earlier dependency-resolution noise was not the final blocker.
+**Interpretation:** `ERROR_NOT_AUTHORIZED` means Cloud API app/project authorization needs configuration; it does not prove no VPS coverage.
 
-## Never do
-
-- Do not send the old artifact 14610956314 again as a camera build.
-- Do not claim build success equals camera runtime success.
-- Do not ask the user to repeat device model or AR Services installation details already recorded.
-- Do not claim Geospatial/VPS/Depth until physical-device runtime results are recorded.
-- Do not treat the temporary native diagnostic controls as the final Monument interface; preserve the approved camera-first web shell and four actions.
-- Do not change production aliases.
-- Update the handoff, this checklist, decisions and Issue #20 after every meaningful test, failure or implementation.
+## Guardrails
+- Never repeat the already-passed camera test unless a regression is observed.
+- Never claim Geospatial, VPS, Depth, anchors or terrain are verified before device evidence.
+- Preserve the existing web UI and four actions; no native-only redesign.
+- Do not change production Vercel aliases without explicit approval.
+- Keep docs short: dated title + one-line path/status + blocker/next action.
