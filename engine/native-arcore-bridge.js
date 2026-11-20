@@ -16,6 +16,11 @@
       if (!NativeAR.available()) return {ok:false, reason:"native-bridge-unavailable"};
       window.MonumentAR.stopGeospatial();
       return {ok:true, state:"stop-requested"};
+    },
+    recheckVps: () => {
+      if (!NativeAR.available() || typeof window.MonumentAR.recheckVps !== "function") return {ok:false, reason:"native-recheck-unavailable"};
+      window.MonumentAR.recheckVps();
+      return {ok:true, state:"query-requested"};
     }
   };
   window.MonumentNativeAR = NativeAR;
