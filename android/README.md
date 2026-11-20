@@ -1,6 +1,6 @@
 # Monument Android Runtime
 
-## Current milestone: Camera Passthrough v0.2.0
+## Current milestone: Camera Passthrough v0.2.0 — camera launch confirmed on device
 
 The native app is now camera-first. It no longer loads the old Earth Mesh web page as its launch screen. The app presents a native OPEN CAMERA action, starts an ARCore Session, binds an external OES camera texture, and renders the live camera background through a GLSurfaceView.
 
@@ -26,8 +26,8 @@ Not implemented or not yet validated:
 - Monument terrain / Cairn grid / geospatial surfaces drawn in camera view.
 - Geospatial/VPS localization and WGS84 anchors in this camera-first build.
 - Depth occlusion.
-- Runtime support on Samsung Galaxy A32 4G (SM-A325F).
-- Physical camera preview test on the user's phone.
+- Sustained frame stability during phone movement and STOP/restart on Samsung Galaxy A32 4G (SM-A325F).
+- Geospatial/VPS localization, WGS84 anchors and Depth support.
 
 Do not call this release a complete AR experience. Its first acceptance gate is simply that tapping OPEN CAMERA displays the live rear-camera image reliably.
 
@@ -55,7 +55,7 @@ On the Samsung Galaxy A32 4G (SM-A325F):
 4. Confirm a live camera image fills the screen behind the native status and controls.
 5. Move and rotate the phone; confirm the feed remains live and does not freeze or turn black.
 6. Tap STOP, then OPEN CAMERA; confirm start/stop/restart works.
-7. Send a screenshot of the running camera screen and report any error text.
+7. Report whether the image remains live while moving/rotating the phone and whether STOP -> OPEN CAMERA restarts cleanly.
 8. Open Editor only as a separate authoring flow; publishing/editorial setup is not required to test camera passthrough.
 
 Do not ask the user to configure an Editorial View or Publish to test camera. If the camera feed fails, capture Logcat and diagnose the native ARCore/GL lifecycle before adding Geospatial.
