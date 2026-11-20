@@ -21,6 +21,7 @@ A Moment is a persistent spatial entity. A Session is a time-bounded live instan
 ## Product definition
 
 - [Product Blueprint v1](docs/product/PRODUCT_BLUEPRINT_V1.md)
+- [First-Person Geospatial Product Direction](docs/product/FIRST_PERSON_GEOSPATIAL_PRODUCT_DIRECTION.md) — accepted product direction and implementation contract; read before continuing spatial-camera work.
 
 ## Architecture status
 
