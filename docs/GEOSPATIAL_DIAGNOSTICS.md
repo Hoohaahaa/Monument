@@ -132,3 +132,15 @@ Google's published ARCore guidance says that, under typical conditions in VPS-co
 ### Interpretation of repeated fresh UNAVAILABLE
 
 If the new build shows `pose Δ0–20m` (or another small value) while `UNAVAILABLE`, the queried coordinate is close to the latest ARCore pose and the result is credible for that point: VPS is not available there. If `pose Δ` is large, the previous result belongs to a different point and a manual recheck is required. If the manual query at the current pose also returns `UNAVAILABLE`, stop spending user time on repeated local retries; record that location as not VPS-covered and continue the GPS + visual-inertial and local-reference positioning layers. Only investigate authorization/network configuration again if the enum is an explicit ERROR, not UNAVAILABLE.
+
+
+## Build #44 — verified manual VPS recheck (2026-11-20)
+
+- GitHub Actions run #44: https://github.com/Hoohaahaa/Monument/actions/runs/44742066355 — **SUCCESS**.
+- Built commit: `593652452c1b272b0b7dbf6c27b414bb53660ebd` (includes renderer commit `468c0a6e67547a23bc62c8ce5cb725f0cc4ffb6f`).
+- Artifact ID: `14630678046`, `monument-camera-passthrough-debug`.
+- APK extracted and verified at `/mnt/data/monument-build44/app-debug.apk`; size 4,191,920 bytes.
+- Metadata: package `dev.monomatter.monument`, versionName `0.2.1`, versionCode `3`.
+- Signing SHA-1: `eb565d1f058175eeb0a5c0c4d7233d99bade6867`, matching the established OAuth signing identity; install-over should work.
+- Build adds latest tracked-pose age and query-to-pose distance (`pose Δ`) plus `RECHECK VPS AT CURRENT LOCATION`, rate-limited with a 30-second cooldown. Manual recheck uses the latest tracked ARCore pose; no user relocation is needed.
+- Next user action, only when convenient: install as an update, tap the manual recheck once, then report VPS enum and `pose Δ`/pose age. Do not ask for more movement. If delta is small and result is fresh UNAVAILABLE, stop local retries at that point and continue the approved non-VPS layers.
