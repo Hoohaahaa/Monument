@@ -99,8 +99,12 @@ class CameraBackgroundRenderer(
                 displayGeometryDirty = false
             }
 
-            if (frame.timestamp != 0L) drawCameraBackground()
-            publishStatus(frame)
+            if (frame.timestamp != 0L) {
+                drawCameraBackground()
+                publishStatus(frame)
+            } else {
+                publishWaitingStatus()
+            }
         } catch (e: CameraNotAvailableException) {
             onStatus("Camera unavailable. Close other camera apps, then tap OPEN CAMERA again.")
             session = null
@@ -139,6 +143,13 @@ class CameraBackgroundRenderer(
         GLES20.glDisableVertexAttribArray(texCoordHandle)
         GLES20.glDepthMask(true)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
+    }
+
+    private fun publishWaitingStatus() {
+        val now = System.currentTimeMillis()
+        if (now - lastStatusAt < 1200L) return
+        lastStatusAt = now
+        onStatus("MONUMENT / CAMERA\\nWaiting for first camera frame…")
     }
 
     private fun publishStatus(frame: Frame) {
