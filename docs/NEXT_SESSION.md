@@ -151,3 +151,19 @@ Last updated: 2026-11-20
 - Build #44 is queued: https://github.com/Hoohaahaa/Monument/actions/runs/44742066355. Wait for success and inspect APK/signature before sharing.
 - Once Build #44 is installed (only when convenient), user does not need to move: tap the manual recheck button once at the current spot. Read `pose Δ...m`. If delta is small and result remains UNAVAILABLE, accept VPS unavailable at that point and stop repeated tests there. Continue GPS/visual-inertial + local-reference layers. Do not make VPS a global dependency.
 - If the result is an explicit `ERROR_NOT_AUTHORIZED` or `ERROR_NETWORK_CONNECTION`, investigate Cloud project/OAuth/network separately. A clean `UNAVAILABLE` is not an auth/network failure.
+
+
+## Build #44 — verified delivery and immediate handoff (2026-11-20)
+
+- Build #44 **SUCCEEDED**: https://github.com/Hoohaahaa/Monument/actions/runs/44742066355; commit `593652452c1b272b0b7dbf6c27b414bb53660ebd`.
+- Artifact `14630678046` downloaded and extracted. Verified APK: `/mnt/data/monument-build44/app-debug.apk` (4,191,920 bytes).
+- Package `dev.monomatter.monument`; versionName `0.2.1`; versionCode `3`; signing SHA-1 `eb565d1f058175eeb0a5c0c4d7233d99bade6867` (same signing key as prior builds).
+- New UI: `RECHECK VPS AT CURRENT LOCATION`; diagnostics add latest tracked pose age and `pose Δ` from the last VPS query to the current tracked pose. Manual request cooldown is 30 seconds.
+- User can install directly over previous build; no uninstall should be needed. At same location, tap manual recheck once when convenient. No relocation required. Send back exact VPS enum plus `pose Δ` and pose age; redact coordinates if sharing full line.
+- After that one result, do not repeat local VPS tests if delta is small and result remains UNAVAILABLE. Continue the three-layer positioning architecture and proceed with transparent WebView compositor/native bridge while waiting for field feedback.
+
+## Current next actions
+1. Wait for user's optional one-time Build #44 manual VPS recheck; no further travel requested.
+2. Independently continue implementation: inspect `MainActivity.kt`, `CameraBackgroundRenderer.kt`, manifest/Gradle, `index.html`, app JS/CSS, and `engine/native-arcore-bridge.js`.
+3. Implement transparent Android WebView compositor and versioned JS bridge over native ARCore camera without starting a second browser `getUserMedia()` stream or replacing the approved camera-first web shell.
+4. Preserve the three localization layers and record rejected alternatives/reasons in `docs/DECISIONS.md`.
