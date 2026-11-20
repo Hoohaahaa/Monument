@@ -118,3 +118,17 @@ Google's published ARCore guidance says that, under typical conditions in VPS-co
 - APK extracted and verified at /mnt/data/monument-build42/app-debug.apk in the assistant runtime.
 - This build contains the VPS query provenance/status changes from commits 3130fb45e65e49762b6ea942d2bff96346b9041e, 3714b58c50a8228ad90e9b7c9313287150300512, and 134a424a328f8017b33dbe786264ba2ad812361f.
 - User has not yet installed build #42 or reported its on-device diagnostic line. Do not treat any earlier UNAVAILABLE observation as verification of this build's refresh behavior.
+
+
+## Field report after Build #42 and diagnostic follow-up (2026-11-20)
+
+- User installed Build #42 and reports the VPS line remains `UNAVAILABLE · CURRENT` after moving to another location; query age was about 90 seconds. This is a fresh service response, not a stale result, but the exact queried point must be compared with the latest tracked pose before concluding that the moved-to point was checked.
+- The `@latitude, longitude` suffix is the **query coordinate** in decimal degrees, rounded to 3 decimals for display. The order is latitude first, longitude second. It is not an error code, device ID, or address. Do not ask the user to share a precise home coordinate; rounded coordinates or the distance delta are sufficient for diagnosis.
+- Important existing behavior: automatic re-query is triggered only after the latest tracked pose is at least 100 m from the previous query coordinate, or after 5 minutes. Moving less than 100 m will not necessarily issue a new query. `CURRENT` only means the query is less than 5 minutes old; it does not mean VPS is available or that the query coordinate matches the current pose.
+- Do not ask the user to keep relocating. The next diagnostic build adds (a) query-to-latest-pose distance in metres, (b) pose age, and (c) a manual `RECHECK VPS AT CURRENT LOCATION` button with a 30-second client cooldown. This allows an explicit query at the latest tracked pose without another trip.
+- Source commits: renderer `468c0a6e67547a23bc62c8ce5cb725f0cc4ffb6f`; Activity UI `593652452c1b272b0b7dbf6c27b414bb53660ebd`.
+- Build #44 is queued for these changes: https://github.com/Hoohaahaa/Monument/actions/runs/44742066355. Do not distribute a new APK until CI succeeds and the artifact is inspected.
+
+### Interpretation of repeated fresh UNAVAILABLE
+
+If the new build shows `pose Δ0–20m` (or another small value) while `UNAVAILABLE`, the queried coordinate is close to the latest ARCore pose and the result is credible for that point: VPS is not available there. If `pose Δ` is large, the previous result belongs to a different point and a manual recheck is required. If the manual query at the current pose also returns `UNAVAILABLE`, stop spending user time on repeated local retries; record that location as not VPS-covered and continue the GPS + visual-inertial and local-reference positioning layers. Only investigate authorization/network configuration again if the enum is an explicit ERROR, not UNAVAILABLE.
