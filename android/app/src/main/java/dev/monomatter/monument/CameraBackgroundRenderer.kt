@@ -14,6 +14,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.util.Locale
+import kotlin.math.*
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -39,7 +40,11 @@ class CameraBackgroundRenderer(
     private var surfaceHeight = 1
     private var lastStatusAt = 0L
     private var lastGeoStatusAt = 0L
-    private var vpsCheckStarted = false
+    @Volatile private var vpsCheckInFlight = false
+    @Volatile private var vpsLastCheckAt = 0L
+    @Volatile private var vpsLastLatitude = Double.NaN
+    @Volatile private var vpsLastLongitude = Double.NaN
+    @Volatile private var vpsRequestId = 0L
     @Volatile private var vpsAvailability = "NOT CHECKED"
 
     private val quadVertices = directBuffer(floatArrayOf(
@@ -56,7 +61,11 @@ class CameraBackgroundRenderer(
     fun setSession(value: Session?) {
         session = value
         textureBound = false
-        vpsCheckStarted = false
+        vpsRequestId += 1
+        vpsCheckInFlight = false
+        vpsLastCheckAt = 0L
+        vpsLastLatitude = Double.NaN
+        vpsLastLongitude = Double.NaN
         vpsAvailability = "NOT CHECKED"
         lastGeoStatusAt = 0L
     }
@@ -166,17 +175,56 @@ class CameraBackgroundRenderer(
             )
         )
 
-        if (!vpsCheckStarted) {
-            vpsCheckStarted = true
-            vpsAvailability = "CHECKING"
-            try {
-                active.checkVpsAvailabilityAsync(lat, lon) { result ->
+        maybeCheckVpsAvailability(active, lat, lon, now)
+    }
+
+    /**
+     * VPS availability is a location query, not a live tracking state.
+     * Re-query after moving at least 100 m, or every 5 minutes while stationary,
+     * so a result from the first fix cannot remain on screen forever.
+     */
+    private fun maybeCheckVpsAvailability(active: Session, latitude: Double, longitude: Double, now: Long) {
+        if (vpsCheckInFlight) return
+
+        val hasPreviousLocation = !vpsLastLatitude.isNaN() && !vpsLastLongitude.isNaN()
+        val movedMeters = if (hasPreviousLocation) {
+            distanceMeters(vpsLastLatitude, vpsLastLongitude, latitude, longitude)
+        } else {
+            Double.POSITIVE_INFINITY
+        }
+        val locationChanged = movedMeters >= VPS_RECHECK_DISTANCE_METERS
+        val retryDue = vpsLastCheckAt == 0L || now - vpsLastCheckAt >= VPS_RECHECK_INTERVAL_MS
+        if (!locationChanged && !retryDue) return
+
+        vpsCheckInFlight = true
+        vpsLastCheckAt = now
+        vpsLastLatitude = latitude
+        vpsLastLongitude = longitude
+        vpsAvailability = "CHECKING"
+        val requestId = ++vpsRequestId
+
+        try {
+            active.checkVpsAvailabilityAsync(latitude, longitude) { result ->
+                if (requestId == vpsRequestId) {
                     vpsAvailability = result.name
+                    vpsCheckInFlight = false
                 }
-            } catch (error: Exception) {
+            }
+        } catch (error: Exception) {
+            if (requestId == vpsRequestId) {
                 vpsAvailability = "CHECK FAILED (${error.javaClass.simpleName})"
+                vpsCheckInFlight = false
             }
         }
+    }
+
+    private fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val earthRadiusMeters = 6_371_000.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = sin(dLat / 2).pow(2.0) +
+            cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(dLon / 2).pow(2.0)
+        return 2.0 * earthRadiusMeters * asin(sqrt(a.coerceIn(0.0, 1.0)))
     }
 
     private fun publishWaitingStatus() {
@@ -269,6 +317,8 @@ class CameraBackgroundRenderer(
             -1f, -1f, 1f, -1f,
             -1f, 1f, 1f, 1f
         )
+        private const val VPS_RECHECK_DISTANCE_METERS = 100.0
+        private const val VPS_RECHECK_INTERVAL_MS = 5 * 60 * 1000L
         private const val VERTEX_SHADER = """
             attribute vec4 a_Position;
             attribute vec2 a_TexCoord;
