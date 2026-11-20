@@ -74,9 +74,10 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Tracking issue: https://github.com/Hoohaahaa/Monument/issues/20
 
 ## Build history
-- v0.2.0 camera passthrough workflow run #12: https://github.com/Hoohaahaa/Monument/actions/runs/44698291433 — triggered by final renderer status commit 4b5818e96ad5e17ec29d7195f0dbac8de5bd4e48; status was queued at the time of the last check. Confirm final status and artifact before distributing.
+- v0.2.0 camera passthrough workflow run #10: https://github.com/Hoohaahaa/Monument/actions/runs/44698143221 — SUCCESS, commit a16039a14d16ec0ec1c7547c8c5450978c58a4d3. Artifact ID 14611343158 (monument-camera-passthrough-debug, ZIP 3,193,233 bytes); APK inside 3,938,005 bytes. This artifact includes the native camera-first Activity, GL camera renderer, lifecycle fixes and correct exception import.
+- Follow-up run #12: https://github.com/Hoohaahaa/Monument/actions/runs/44698291433 — building the later diagnostic-only change that displays “Waiting for first camera frame” instead of prematurely saying the camera is live. Run #10 artifact is usable for the camera passthrough device test; #12 is not yet needed to test the core camera path.
 - Intermediate CI run #6 failed at Kotlin compile: wrong CameraNotAvailableException package and stale probe MainActivity references to JSONObject. Fixed by importing com.google.ar.core.exceptions.CameraNotAvailableException and replacing the old WebView probe Activity with the native camera-first Activity. Do not treat that failed run as the current code result.
-- Expected artifact name: monument-camera-passthrough-debug. No new APK should be sent until this run succeeds and the artifact is verified.
+- Artifact name: monument-camera-passthrough-debug. Verified run #10 APK was downloaded and extracted in the current session to /mnt/data/monument-camera-passthrough-run10/app-debug.apk. This path is valid for this session only; re-verify before reusing in another session.
 - Workflow: `.github/workflows/android-arcore-build.yml`
 - Workflow builds Debug APK using JDK 17 and Gradle 8.9; uploads artifact for 7 days.
 - Run #1: https://github.com/Hoohaahaa/Monument/actions/runs/44696297862 — FAILED due Java/Kotlin target mismatch.
