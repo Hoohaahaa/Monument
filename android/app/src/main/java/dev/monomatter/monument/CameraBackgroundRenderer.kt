@@ -136,7 +136,10 @@ class CameraBackgroundRenderer(
         if (now - lastGeoStatusAt < 1500L) return
         lastGeoStatusAt = now
 
-        val earth: Earth = active.earth
+        val earth: Earth = active.earth ?: run {
+            onStatus("MONUMENT / GEOLOCALIZATION\nEarth: NOT AVAILABLE · waiting for Geospatial session…")
+            return
+        }
         val earthTracking = earth.trackingState
         val earthState = earth.earthState
         if (earthTracking != TrackingState.TRACKING) {
