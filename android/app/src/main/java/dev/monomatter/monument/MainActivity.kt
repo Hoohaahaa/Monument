@@ -29,6 +29,7 @@ class MainActivity : Activity() {
     private lateinit var renderer: CameraBackgroundRenderer
     private lateinit var status: TextView
     private lateinit var startButton: Button
+    private lateinit var vpsCheckButton: Button
     private var session: Session? = null
     private var pendingStart = false
     private var cameraRequested = false
@@ -73,13 +74,28 @@ class MainActivity : Activity() {
             }
         }
 
-        val controls = LinearLayout(this).apply {
+        vpsCheckButton = Button(this).apply {
+            text = "RECHECK VPS AT CURRENT LOCATION"
+            setOnClickListener {
+                isEnabled = false
+                glView.queueEvent { renderer.recheckVpsAtCurrentPose() }
+                postDelayed({ isEnabled = true }, 30_000L)
+            }
+        }
+
+        val actionRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(8, 8, 8, 18)
             addView(startButton, LinearLayout.LayoutParams(0, -2, 1f))
             addView(stopButton, LinearLayout.LayoutParams(0, -2, 0.55f))
             addView(editorButton, LinearLayout.LayoutParams(0, -2, 1f))
+        }
+        val controls = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setPadding(8, 8, 8, 18)
+            addView(vpsCheckButton, LinearLayout.LayoutParams(-1, -2))
+            addView(actionRow, LinearLayout.LayoutParams(-1, -2))
         }
 
         val root = FrameLayout(this)
