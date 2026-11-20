@@ -12,7 +12,7 @@
 ## Latest output
 - Build: [GitHub Actions #20](https://github.com/Hoohaahaa/Monument/actions/runs/44699746664) · SUCCESS.
 - Commit: `442d057e23a12b2d2663c4ebb0656774b785a61f`.
-- Artifact: `monument-camera-passthrough-debug` · ID `14612905251` · 3,937,? bytes (ZIP contains `app-debug.apk`, 3,938,005 bytes).
+- Artifact: `monument-camera-passthrough-debug` · ID `14612905251` · ZIP size 3,197,340 bytes; contains `app-debug.apk` (3,938,005 bytes).
 - APK: `/mnt/data/monument-geospatial-run20/app-debug.apk` (ChatGPT session path; share link only from the session where verified).
 - Fix: `Session.earth` is nullable (`Earth?`). Added null-safe handling; no longer assigns it to non-null `Earth`.
 
