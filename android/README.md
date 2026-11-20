@@ -1,6 +1,6 @@
 # Monument Android Runtime
 
-## Current milestone: Camera Passthrough v0.2.0 — camera launch confirmed on device
+## Current milestone: Camera Passthrough accepted; Geospatial diagnostics in progress
 
 The native app is now camera-first. It no longer loads the old Earth Mesh web page as its launch screen. The app presents a native OPEN CAMERA action, starts an ARCore Session, binds an external OES camera texture, and renders the live camera background through a GLSurfaceView.
 
@@ -45,6 +45,20 @@ Do not call this release a complete AR experience. Its first acceptance gate is 
 - Version: 0.2.0 (versionCode 2)
 - CI workflow: .github/workflows/android-arcore-build.yml
 - Expected artifact: monument-camera-passthrough-debug
+
+## Geospatial diagnostics in the current source (CI/device validation pending)
+
+- Explicit privacy disclosure before requesting location for Geospatial use.
+- Request both fine and coarse location; Geospatial mode is enabled only when precise location is granted.
+- Check `Session.isGeospatialModeSupported(Config.GeospatialMode.ENABLED)` before configuring the session.
+- If enabled and Earth reaches `TrackingState.TRACKING`, display WGS84 latitude/longitude, altitude above the WGS84 ellipsoid, horizontal accuracy, vertical accuracy and orientation yaw accuracy.
+- Query VPS asynchronously with `Session.checkVpsAvailabilityAsync()` once a valid camera geospatial pose is available.
+- A VPS authorization error is not the same as VPS being unavailable at that location. Cloud API authorization is not yet verified.
+- Do not claim device support until this new diagnostic APK is tested on the physical phone.
+
+## Interface constraint
+
+The current native camera buttons/status panel are temporary diagnostic UI only. They are not the product interface. Preserve the approved camera-first Monument shell and its four actions: Camera / Place / Create / Publish. The next UI milestone is a transparent compositor over the native camera, followed by the real spatial renderer.
 
 ## Device test checklist
 
