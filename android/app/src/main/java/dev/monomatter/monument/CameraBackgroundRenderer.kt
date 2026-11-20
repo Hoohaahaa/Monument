@@ -42,6 +42,7 @@ class CameraBackgroundRenderer(
     private var lastGeoStatusAt = 0L
     @Volatile private var vpsCheckInFlight = false
     @Volatile private var vpsLastCheckAt = 0L
+    @Volatile private var vpsLastResultAt = 0L
     @Volatile private var vpsLastLatitude = Double.NaN
     @Volatile private var vpsLastLongitude = Double.NaN
     @Volatile private var vpsRequestId = 0L
@@ -64,6 +65,7 @@ class CameraBackgroundRenderer(
         vpsRequestId += 1
         vpsCheckInFlight = false
         vpsLastCheckAt = 0L
+        vpsLastResultAt = 0L
         vpsLastLatitude = Double.NaN
         vpsLastLongitude = Double.NaN
         vpsAvailability = "NOT CHECKED"
@@ -211,17 +213,27 @@ class CameraBackgroundRenderer(
             active.checkVpsAvailabilityAsync(latitude, longitude) { result ->
                 if (requestId == vpsRequestId) {
                     vpsAvailability = result.name
+                    vpsLastResultAt = System.currentTimeMillis()
                     vpsCheckInFlight = false
                 }
             }
         } catch (error: Exception) {
             if (requestId == vpsRequestId) {
-                vpsAvailability = "CHECK FAILED (${error.javaClass.simpleName})"
+                vpsAvailability = "REQUEST ERROR: ${error.javaClass.simpleName}"
+                vpsLastResultAt = System.currentTimeMillis()
                 vpsCheckInFlight = false
             }
         }
     }
 
+    private fun vpsDiagnosticLine(now: Long): String {
+        if (vpsLastCheckAt == 0L) return "VPS: NOT CHECKED"
+        val ageSeconds = (now - vpsLastCheckAt).coerceAtLeast(0L) / 1000L
+        val freshness = if (now - vpsLastCheckAt >= VPS_RECHECK_INTERVAL_MS) "STALE" else "CURRENT"
+        val location = if (vpsLastLatitude.isNaN() || vpsLastLongitude.isNaN()) "unknown" else String.format(Locale.US, "%.3f, %.3f", vpsLastLatitude, vpsLastLongitude)
+        val resultAge = if (vpsLastResultAt == 0L) "pending" else "age ${(now - vpsLastResultAt).coerceAtLeast(0L) / 1000L}s"
+        return "VPS: $vpsAvailability · $freshness · query ${ageSeconds}s ago · result $resultAge · @$location"
+    }
     private fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val earthRadiusMeters = 6_371_000.0
         val dLat = Math.toRadians(lat2 - lat1)
