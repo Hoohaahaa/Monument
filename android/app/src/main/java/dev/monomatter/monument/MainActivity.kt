@@ -18,7 +18,6 @@ import com.google.ar.core.ArCoreApk
 import com.google.ar.core.Config
 import com.google.ar.core.Session
 import com.google.ar.core.TrackingState
-import org.json.JSONObject
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -67,7 +66,7 @@ class MainActivity : Activity() {
                 if (!hasPermissions()) {
                     pendingStart = true
                     ActivityCompat.requestPermissions(this@MainActivity,
-                        arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION),
+                        arrayOf(Manifest.permission.CAMERA),
                         REQUEST_PERMISSIONS)
                 } else startSession()
             }
