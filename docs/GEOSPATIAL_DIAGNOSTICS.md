@@ -34,3 +34,24 @@ The prior renderer invoked the VPS async check but displayed its callback result
 - This is a diagnostic refresh fix, not a claim that VPS coverage exists. A returned `UNAVAILABLE` after a fresh query means Google reports no VPS coverage at those queried coordinates. `ERROR_NETWORK_CONNECTION`, `ERROR_NOT_AUTHORIZED`, and other error enums must be distinguished from `UNAVAILABLE`.
 - The next APK must be installed before interpreting another field result. The user does not need to relocate or run another test until they have the practical opportunity.
 - ARCore Geospatial can operate without VPS coverage; GPS may be sufficient outdoors, depending on measured H/V/yaw quality. Do not make VPS a hard prerequisite for every Monument workflow.
+
+
+## Monument positioning architecture decision (2026-11-20)
+
+The product will use three complementary positioning/localization layers. They are not mutually exclusive fallbacks and Monument must not be architecturally dependent on VPS:
+
+1. **Global visual-geospatial layer — ARCore Geospatial + VPS when available.** Use global latitude/longitude/altitude and orientation; query VPS availability for the current pose location. VPS availability is optional and must never be treated as a prerequisite for opening the experience.
+2. **Device-local tracking layer — GNSS/GPS + visual-inertial tracking.** Fuse the device location estimate with ARCore camera motion/visual-inertial tracking and device sensors. This supports continuous pose updates when VPS is unavailable, but confidence must reflect GNSS drift and heading/altitude uncertainty. Earth `TRACKING` alone is not a precision guarantee.
+3. **Local reference / assisted anchoring layer.** For precision-sensitive placement, allow a locally established reference such as a known marker, surveyed point, QR/image target, or a user-confirmed calibration origin. Local anchors should be expressed relative to a stable local frame and optionally aligned to global coordinates when trustworthy. The exact reference technology is a future design decision; do not assume one marker technology is selected yet.
+
+### Confidence and fusion policy
+- Keep raw source measurements and their provenance separate; do not silently blend values without recording source, timestamp, uncertainty, and transform.
+- Each placement should expose a quality state such as acquiring / approximate / stable / local-calibrated, based on a rolling observation window and measured uncertainty.
+- If global VPS is unavailable, continue in a lower-confidence mode where appropriate; gate or label precision-sensitive publishing rather than blocking the whole app.
+- Local calibration can improve relative stability but does not automatically prove globally correct coordinates.
+- Record when an anchor is global, device-relative, or local-reference-relative, and preserve transforms between frames.
+
+### Iran / regional test context
+- The current field test is being conducted in Iran. Region may affect VPS coverage because coverage is location-specific and depends on Google's visual mapping availability. Network reachability, service authorization/configuration, device support, and location coverage are distinct possible causes.
+- Do not conclude that Iran is the cause from a single `UNAVAILABLE` response. Distinguish the ARCore availability enum from thrown/network errors and record the queried coordinates (with user privacy safeguards), timestamp, device, app version, and connectivity diagnostics.
+- The user currently cannot travel for additional field tests. Do not require relocation. First validate that the new app build re-queries VPS after movement/time and reports the exact enum correctly.
