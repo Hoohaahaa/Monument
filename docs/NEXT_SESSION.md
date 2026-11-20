@@ -9,19 +9,18 @@
 - The failure is documented in the handoff and Issue #20. Do not ask the user to repeat the old test or configure Editorial View / Publish.
 - New v0.2.0 code adds a native camera-first activity and a GLES/ARCore camera background renderer.
 - New code is committed to feature/android-arcore-geospatial-bridge.
-- Latest CI run for the latest renderer source: run #12, ID 44698291433, triggered by commit 4b5818e96ad5e17ec29d7195f0dbac8de5bd4e48; it was queued at the last check. Check its final status before proceeding. Earlier intermediate runs are not release candidates.
+- Verified camera-passthrough APK: run #10, ID 44698143221, SUCCESS; artifact ID 14611343158. This build contains the core native camera implementation and is ready for A32 testing.
+- Follow-up run #12, ID 44698291433, includes only a clearer waiting-for-first-frame status message; it was still running at last check. It is not a blocker for testing the run #10 camera artifact.
 - Intermediate run #6 failed with compile errors (exception import package and stale MainActivity JSONObject references); both were corrected in later commits. Do not distribute any artifact from those earlier runs.
 - No v0.2.0 physical-device test has happened yet. Do not claim the camera works until the user confirms it.
 
 ## Immediate sequence
 
-1. Check latest branch head and Android workflow run. Inspect failed logs if CI failed.
-2. Fix all compile errors and rerun CI. Do not send an APK until the workflow succeeds and the artifact exists.
-3. Inspect the final source diff for lifecycle, rotation, texture binding, and session threading.
-4. Provide the v0.2.0 APK with a clear statement that this is a camera-passthrough test only.
-5. Ask the user to install the new build, tap OPEN CAMERA, and send a screenshot / exact error. They should not need to set up any Surface or publish content.
-6. If camera works: record the device acceptance result, then implement Geospatial capability/VPS diagnostics.
-7. Only after pose and localization are validated: add the transparent WebView composition and feed camera pose into Monument's first-person terrain and Surface engine.
+1. The run #10 APK is compiled and verified; use artifact ID 14611343158 / monument-camera-passthrough-debug for the first device test. Run #12 is a later diagnostic-text-only build and can be checked separately.
+2. Inspect the source diff for lifecycle, rotation, texture binding, and Session.update() threading before changing more code.
+3. User installs v0.2.0, taps OPEN CAMERA, and sends a screenshot / exact error. No Surface creation or Publish action is required.
+4. If camera works: record the device acceptance result, then implement Geospatial capability/VPS diagnostics.
+5. Only after pose and localization are validated: add the transparent WebView composition and feed camera pose into Monument's first-person terrain and Surface engine.
 
 ## Never do
 
