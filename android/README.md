@@ -33,3 +33,7 @@
 - Do not repeat the passed camera test or precise-location permission check.
 - Preserve the approved web UI and four actions; do not promote the diagnostic shell.
 - Never change production Vercel aliases without explicit approval.
+
+## CI signing cache verification
+- Two completed builds (#27 and #28) produced different debug signing SHA-1 fingerprints; neither fingerprint is approved for OAuth registration.
+- A follow-up build is required after the cache has settled. Compare its certificate SHA-1 with the preceding build before treating the cache as stable.
