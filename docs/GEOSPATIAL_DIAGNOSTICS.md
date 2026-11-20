@@ -71,3 +71,12 @@ VPS is a strategically important accuracy layer for Monument, particularly where
 5. If a confirmed fresh UNAVAILABLE persists, investigate coverage at the tested coordinate separately from network reachability, authorization, and device compatibility. Do not label a network/auth failure as missing coverage.
 
 **Development priority:** VPS diagnostics and the positioning data contract are first-class parallel workstreams. They should not block the transparent WebView compositor, shared spatial data model, or non-VPS placement workflows. The product must preserve the three-layer design: global VPS-assisted geospatial, device-local tracking, and local-reference anchoring.
+
+## VPS query provenance diagnostics implementation (2026-11-20)
+
+- Renderer now retains the request start time, result time, and the coordinates actually sent to the availability query.
+- On-device status reports the availability enum, CURRENT/STALE freshness, query age, result age/pending state, and coordinates rounded to three decimal places (roughly 100 m latitude granularity). This is a local diagnostic display only; this renderer does not upload or persist a location history.
+- Synchronous request exceptions are labeled separately as request errors; ARCore result enum values (including network/authorization/resource errors) remain visible by their exact enum name.
+- Request/result metadata is reset when the session or Geospatial mode is reset, and stale callbacks are ignored by request ID.
+- Source commits: `3130fb45e65e49762b6ea942d2bff96346b9041e`, `3714b58c50a8228ad90e9b7c9313287150300512`, `134a424a328f8017b33dbe786264ba2ad812361f`.
+- CI build #42 is running for the final reset/metadata state; do not distribute an APK until the latest run succeeds.
