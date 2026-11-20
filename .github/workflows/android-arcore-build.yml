@@ -27,13 +27,25 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-      # Reuse one development signing certificate across CI builds so the
-      # OAuth package + SHA-1 registration does not change every run.
+      # Keep this exact debug-only certificate across CI builds.
       - name: Restore development signing key
         uses: actions/cache@v4
         with:
-          path: ~/.android/debug.keystore
-          key: monument-android-debug-signing-v1
+          path: android/debug.keystore
+          key: monument-android-debug-signing-v2
+      - name: Create development signing key when cache is empty
+        shell: bash
+        run: |
+          if [ ! -f android/debug.keystore ]; then
+            "$JAVA_HOME/bin/keytool" -genkeypair -v \
+              -keystore android/debug.keystore \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          test -s android/debug.keystore
       - name: Build debug APK
         working-directory: android
         run: gradle --no-daemon assembleDebug
