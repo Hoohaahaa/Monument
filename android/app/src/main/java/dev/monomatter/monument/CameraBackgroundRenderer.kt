@@ -45,6 +45,10 @@ class CameraBackgroundRenderer(
     @Volatile private var vpsLastResultAt = 0L
     @Volatile private var vpsLastLatitude = Double.NaN
     @Volatile private var vpsLastLongitude = Double.NaN
+    @Volatile private var latestPoseLatitude = Double.NaN
+    @Volatile private var latestPoseLongitude = Double.NaN
+    @Volatile private var latestPoseAt = 0L
+    @Volatile private var vpsLastManualCheckAt = 0L
     @Volatile private var vpsRequestId = 0L
     @Volatile private var vpsAvailability = "NOT CHECKED"
 
@@ -68,6 +72,10 @@ class CameraBackgroundRenderer(
         vpsLastResultAt = 0L
         vpsLastLatitude = Double.NaN
         vpsLastLongitude = Double.NaN
+        latestPoseLatitude = Double.NaN
+        latestPoseLongitude = Double.NaN
+        latestPoseAt = 0L
+        vpsLastManualCheckAt = 0L
         vpsAvailability = "NOT CHECKED"
         lastGeoStatusAt = 0L
     }
@@ -80,6 +88,10 @@ class CameraBackgroundRenderer(
         vpsLastResultAt = 0L
         vpsLastLatitude = Double.NaN
         vpsLastLongitude = Double.NaN
+        latestPoseLatitude = Double.NaN
+        latestPoseLongitude = Double.NaN
+        latestPoseAt = 0L
+        vpsLastManualCheckAt = 0L
         vpsAvailability = "NOT CHECKED"
         lastGeoStatusAt = 0L
     }
@@ -173,6 +185,9 @@ class CameraBackgroundRenderer(
         val horizontal = pose.horizontalAccuracy
         val vertical = pose.verticalAccuracy
         val yawAccuracy = pose.orientationYawAccuracy
+        latestPoseLatitude = lat
+        latestPoseLongitude = lon
+        latestPoseAt = now
 
         onStatus(
             String.format(
@@ -202,7 +217,33 @@ class CameraBackgroundRenderer(
         val locationChanged = movedMeters >= VPS_RECHECK_DISTANCE_METERS
         val retryDue = vpsLastCheckAt == 0L || now - vpsLastCheckAt >= VPS_RECHECK_INTERVAL_MS
         if (!locationChanged && !retryDue) return
+        startVpsCheck(active, latitude, longitude, now)
+    }
 
+    /** Manual, user-triggered check at the latest tracked camera pose. */
+    fun recheckVpsAtCurrentPose() {
+        val active = session ?: return
+        val latitude = latestPoseLatitude
+        val longitude = latestPoseLongitude
+        if (latitude.isNaN() || longitude.isNaN()) {
+            onStatus("VPS RECHECK: waiting for a valid Geospatial pose.")
+            return
+        }
+        val now = System.currentTimeMillis()
+        if (vpsCheckInFlight) {
+            onStatus("VPS RECHECK: a query is already in progress.")
+            return
+        }
+        if (now - vpsLastManualCheckAt < VPS_MANUAL_RECHECK_COOLDOWN_MS) {
+            val remaining = (VPS_MANUAL_RECHECK_COOLDOWN_MS - (now - vpsLastManualCheckAt)) / 1000L
+            onStatus("VPS RECHECK: please wait ${remaining}s before another manual query.")
+            return
+        }
+        vpsLastManualCheckAt = now
+        startVpsCheck(active, latitude, longitude, now)
+    }
+
+    private fun startVpsCheck(active: Session, latitude: Double, longitude: Double, now: Long) {
         vpsCheckInFlight = true
         vpsLastCheckAt = now
         vpsLastLatitude = latitude
@@ -233,7 +274,13 @@ class CameraBackgroundRenderer(
         val freshness = if (now - vpsLastCheckAt >= VPS_RECHECK_INTERVAL_MS) "STALE" else "CURRENT"
         val location = if (vpsLastLatitude.isNaN() || vpsLastLongitude.isNaN()) "unknown" else String.format(Locale.US, "%.3f, %.3f", vpsLastLatitude, vpsLastLongitude)
         val resultAge = if (vpsLastResultAt == 0L) "pending" else "age ${(now - vpsLastResultAt).coerceAtLeast(0L) / 1000L}s"
-        return "VPS: $vpsAvailability · $freshness · query ${ageSeconds}s ago · result $resultAge · @$location"
+        val poseDelta = if (latestPoseLatitude.isNaN() || latestPoseLongitude.isNaN()) {
+            "pose unknown"
+        } else {
+            "pose Δ${distanceMeters(vpsLastLatitude, vpsLastLongitude, latestPoseLatitude, latestPoseLongitude).roundToInt()}m"
+        }
+        val poseAge = if (latestPoseAt == 0L) "" else " · pose ${(now - latestPoseAt).coerceAtLeast(0L) / 1000L}s ago"
+        return "VPS: $vpsAvailability · $freshness · query ${ageSeconds}s ago · result $resultAge · @$location · $poseDelta$poseAge"
     }
     private fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val earthRadiusMeters = 6_371_000.0
@@ -336,6 +383,7 @@ class CameraBackgroundRenderer(
         )
         private const val VPS_RECHECK_DISTANCE_METERS = 100.0
         private const val VPS_RECHECK_INTERVAL_MS = 5 * 60 * 1000L
+        private const val VPS_MANUAL_RECHECK_COOLDOWN_MS = 30 * 1000L
         private const val VERTEX_SHADER = """
             attribute vec4 a_Position;
             attribute vec2 a_TexCoord;
