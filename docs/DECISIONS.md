@@ -39,3 +39,21 @@ This file records accepted decisions and rejected paths so future sessions do no
 **Evidence:** [Google ARCore authorization troubleshooting](https://developers.google.com/ar/develop/authorization/troubleshooting?platform=android) · [EarthState reference](https://developers.google.com/ar/reference/java/com/google/ar/core/Earth.EarthState).
 
 **Still unverified:** Whether the Cloud project and OAuth client are configured correctly; Earth TRACKING; valid WGS84 pose; VPS coverage; Depth; world anchors; terrain rendering.
+
+
+## 2026-11-20 — VPS is a critical capability, not a global development gate
+
+**Decision:** Treat Google VPS as a first-class, high-value localization capability and maintain a dedicated VPS verification workstream. Do not make all Monument development, app startup, content creation, or publishing depend on VPS being available at the current location.
+
+**Why it matters:** VPS can materially improve global localization and orientation, especially where GNSS is weak (for example indoors or in dense urban environments). Google documents that VPS availability is location-specific and that Geospatial API can still operate without VPS; in suitable open-sky outdoor environments GPS may be sufficient. Therefore VPS is important to the quality ceiling, but it is not the only valid positioning path.
+
+**Required product behavior:**
+- Prefer VPS-assisted global localization whenever available and report its availability/freshness explicitly.
+- When VPS is unavailable, continue with device-local GNSS + visual-inertial tracking, but downgrade confidence and restrict or label precision-sensitive placement.
+- Keep local-reference calibration as the precision path for relative placement where needed.
+- Never treat a VPS availability check as proof that a live VPS localization fix is active.
+- Never treat Earth tracking alone as proof of precision.
+
+**Not selected:** Make VPS a hard prerequisite for Monument or pause all development until VPS is available in the user's current region. Reason: this would make the product unusable in uncovered areas and conflate a location-specific Google service with Monument's own positioning architecture.
+
+**Current field status:** The user still reports VPS: UNAVAILABLE; the planned >=100 m movement test has not yet been performed. The installed build number for this latest report is not confirmed. Do not infer regional unavailability from this one location/result, and do not ask the user to travel solely for this test.
