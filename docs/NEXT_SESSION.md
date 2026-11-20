@@ -2,7 +2,7 @@
 
 > Read this file together with docs/PROJECT_STATE_AND_HANDOFF.md, docs/DECISIONS.md, and GitHub Issue #20 before making changes. This checklist is the compact entry point for a fresh chat.
 
-## Current truth (2026-11-20)
+## Current truth (2026-11-20, updated after device feedback)
 
 - Target device: Samsung Galaxy A32 4G, SM-A325F.
 - Previous v0.1.0 probe was installed and launched by the user, but failed acceptance: no live camera appeared; Open Camera led into the web Editorial View flow.
@@ -12,15 +12,15 @@
 - Verified camera-passthrough APK: run #10, ID 44698143221, SUCCESS; artifact ID 14611343158. This build contains the core native camera implementation and is ready for A32 testing.
 - Follow-up run #12, ID 44698291433, includes only a clearer waiting-for-first-frame status message; it was still running at last check. It is not a blocker for testing the run #10 camera artifact.
 - Intermediate run #6 failed with compile errors (exception import package and stale MainActivity JSONObject references); both were corrected in later commits. Do not distribute any artifact from those earlier runs.
-- No v0.2.0 physical-device test has happened yet. Do not claim the camera works until the user confirms it.
+- Physical-device feedback: user confirms that OPEN CAMERA now opens the camera on the Samsung Galaxy A32 4G. Treat camera launch as passed. The user has not separately confirmed extended stability, phone-motion behavior, STOP/restart, or Geospatial/VPS; do not infer those capabilities.
 
 ## Immediate sequence
 
 1. The run #10 APK is compiled and verified; use artifact ID 14611343158 / monument-camera-passthrough-debug for the first device test. Run #12 is a later diagnostic-text-only build and can be checked separately.
 2. Inspect the source diff for lifecycle, rotation, texture binding, and Session.update() threading before changing more code.
-3. User installs v0.2.0, taps OPEN CAMERA, and sends a screenshot / exact error. No Surface creation or Publish action is required.
-4. If camera works: record the device acceptance result, then implement Geospatial capability/VPS diagnostics.
-5. Only after pose and localization are validated: add the transparent WebView composition and feed camera pose into Monument's first-person terrain and Surface engine.
+3. Camera launch is now user-confirmed on the physical SM-A325F. Do not ask the user to repeat the basic launch test.
+4. Next, validate sustained live frames while rotating/moving the phone and STOP -> OPEN CAMERA restart. Then implement Geospatial runtime capability and VPS diagnostics as a separate gate.
+5. Only after pose and localization are validated: add transparent WebView composition and feed camera pose into Monument's first-person terrain and Surface engine.
 
 ## Never do
 
