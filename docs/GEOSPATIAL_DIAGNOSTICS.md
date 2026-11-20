@@ -55,3 +55,19 @@ The product will use three complementary positioning/localization layers. They a
 - The current field test is being conducted in Iran. Region may affect VPS coverage because coverage is location-specific and depends on Google's visual mapping availability. Network reachability, service authorization/configuration, device support, and location coverage are distinct possible causes.
 - Do not conclude that Iran is the cause from a single `UNAVAILABLE` response. Distinguish the ARCore availability enum from thrown/network errors and record the queried coordinates (with user privacy safeguards), timestamp, device, app version, and connectivity diagnostics.
 - The user currently cannot travel for additional field tests. Do not require relocation. First validate that the new app build re-queries VPS after movement/time and reports the exact enum correctly.
+
+
+## VPS importance and current test status (2026-11-20)
+
+VPS is a strategically important accuracy layer for Monument, particularly where GPS is weak (indoors, urban canyons, or visually complex built environments). It is not a universal prerequisite. Google's ARCore documentation explicitly says Geospatial can be used where VPS coverage is absent and that open-sky outdoor GPS may be sufficient; it also describes VPS availability as a location-specific query. See [Google: Check VPS availability](https://developers.google.com/ar/develop/c/geospatial/check-vps-availability) and [VpsAvailability enum](https://developers.google.com/ar/reference/java/com/google/ar/core/VpsAvailability).
+
+**Current report:** The user again sees VPS: UNAVAILABLE. The >=100 m movement/re-query test has not yet been performed. The build number associated with this latest report is not confirmed. Treat the result as a report for the current tested coordinate only; it does not establish that all of Iran is uncovered, nor distinguish a stale result until the movement-triggered refresh is validated.
+
+**VPS workstream — required engineering tasks:**
+1. Confirm the installed APK contains the >=100 m / 5-minute re-query change before interpreting the next field result.
+2. On a future convenient test (no travel required now), capture the exact enum after the normal query and again after >=100 m movement; record query timestamp and a privacy-safe coordinate reference.
+3. Keep UNAVAILABLE distinct from ERROR_NETWORK_CONNECTION, ERROR_NOT_AUTHORIZED, ERROR_RESOURCE_EXHAUSTED, ERROR_INTERNAL, and thrown exceptions.
+4. Add diagnostic provenance: queried coordinate (privacy-safe/rounded), query time, result, app/build version, and whether the result is current or stale.
+5. If a confirmed fresh UNAVAILABLE persists, investigate coverage at the tested coordinate separately from network reachability, authorization, and device compatibility. Do not label a network/auth failure as missing coverage.
+
+**Development priority:** VPS diagnostics and the positioning data contract are first-class parallel workstreams. They should not block the transparent WebView compositor, shared spatial data model, or non-VPS placement workflows. The product must preserve the three-layer design: global VPS-assisted geospatial, device-local tracking, and local-reference anchoring.
