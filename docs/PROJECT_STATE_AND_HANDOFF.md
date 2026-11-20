@@ -1,8 +1,10 @@
 # Monument — Persistent Project State / Handoff
 Last updated: 2026-11-20
-Current focus: Android first-person ARCore capability probe for Samsung Galaxy A32 4G (SM-A325F).
+Current focus: replace the failed non-camera ARCore probe with a real Android camera passthrough runtime for Samsung Galaxy A32 4G (SM-A325F).
 
-> This file is the durable continuity record. Read it first when continuing Monument work in a new chat. Update it after every meaningful implementation, decision, test, failure, or deployment. Do not rely on chat history alone.
+> **MANDATORY NEXT-CHAT CHECKPOINT:** Before editing code, building another APK, or asking the user to repeat anything, read this handoff and GitHub Issue [#20](https://github.com/Hoohaahaa/Monument/issues/20). The last APK was physically installed and opened by the user, but it did not open a live camera. Do not treat that probe as a working camera app, do not ask the user to configure Editorial View or Publish, and do not repeat the same probe build. First inspect the current branch and MainActivity.kt; implement the GL camera passthrough/compositor described below. Only ask the user to install a replacement APK after a new build is ready. The user should not have to re-explain this failure in a future chat.
+
+This file is the durable continuity record. Read it first when continuing Monument work in a new chat. Update it after every meaningful implementation, decision, test, failure, or deployment. Do not rely on chat history alone.
 
 ## Product definition (non-negotiable)
 Monument is a first-person geospatial spatial-publishing platform. The primary experience is the user standing at a real geographic location, with the phone camera acting as their eyes. Rotating the phone changes the viewed direction over the real terrain; the user sees geographic ground/horizon, a precise elegant topographic grid inspired by the user's Cairn reference at monomatter.dev/cairn, geographic labels, and spatial content surfaces anchored to real-world coordinates. Surfaces are first-class objects with latitude, longitude, altitude, dimensions, orientation, content and lifecycle. They can contain text, images, video, charts and interactive content. The user can create multiple surfaces and connect places using points, columns, trajectories and loops.
@@ -50,6 +52,12 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - The current scheduled-worker `Session.update()` probe is not a valid render-loop foundation and must be replaced with ARCore updates on the GL render thread.
 - Current APK is a probe, not a usable camera app. User should not spend more time configuring Editorial View or publishing to make the camera appear. Keep the installed APK only if useful for comparison; it is safe to close/uninstall. Wait for a replacement build before testing camera again.
 - Tracking issue: https://github.com/Hoohaahaa/Monument/issues/20
+
+## Previous APK — explicitly failed user acceptance (2026-11-20)
+- Build artifact monument-arcore-probe-debug (artifact ID 14610956314) was installed and launched by the user on the target phone.
+- User acceptance result: FAIL — no camera image, no camera passthrough, and no visible AR experience. The app launched into a WebView/editorial workflow instead.
+- This result supersedes any assumption that a successful CI build means the Android experience works. Do not distribute this same artifact again as a camera build.
+- Required next release: a new APK with an actual GL-rendered ARCore camera background and transparent Monument overlay. Build/CI success is only a compile gate; user device confirmation remains required.
 
 ## Native probe status (2026-11-20)
 - Android scaffold exists under `android/`.
