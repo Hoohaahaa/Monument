@@ -148,10 +148,14 @@ class MainActivity : Activity() {
 
     private fun stopCamera() {
         cameraRequested = false
-        try { session?.pause() } catch (_: Exception) {}
-        glView.queueEvent { renderer.setSession(null) }
-        startButton.text = "OPEN CAMERA"
-        status.text = "MONUMENT / CAMERA\nCamera stopped"
+        glView.queueEvent {
+            renderer.setSession(null)
+            runOnUiThread {
+                try { session?.pause() } catch (_: Exception) {}
+                startButton.text = "OPEN CAMERA"
+                status.text = "MONUMENT / CAMERA\nCamera stopped"
+            }
+        }
     }
 
     override fun onResume() {
@@ -171,8 +175,8 @@ class MainActivity : Activity() {
     }
 
     override fun onPause() {
-        try { session?.pause() } catch (_: Exception) {}
         if (::glView.isInitialized) glView.onPause()
+        try { session?.pause() } catch (_: Exception) {}
         super.onPause()
     }
 
