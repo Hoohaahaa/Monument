@@ -41,6 +41,11 @@ The first spatial-engine prototype has been imported from the isolated Portfolio
 
 See [migration status](docs/architecture/MIGRATION_STATUS.md) before treating the imported files as the complete application.
 
+## Native Android / ARCore bridge
+
+- [Android ARCore bridge probe](android/README.md) — isolated native host scaffold and JavaScript bridge contract.
+- [Samsung Galaxy A32 compatibility assessment](docs/device/SAMSUNG_GALAXY_A32_ARCORE_ASSESSMENT.md) — official catalogue findings and runtime verification steps.
+
 ## Working rules
 
 Evidence before certainty. Product autonomy and explicit integration contracts. Smallest sufficient architecture. Least privilege and data minimization. Distinguish proposed, implemented, tested, and operational states. Document alternatives, failure paths, costs, and revisit conditions.
