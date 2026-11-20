@@ -12,6 +12,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.opengl.GLSurfaceView
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.ar.core.ArCoreApk
@@ -19,9 +20,9 @@ import com.google.ar.core.Config
 import com.google.ar.core.Session
 
 /**
- * Native-first camera entry point.
- * This milestone proves camera passthrough only; Geospatial anchors and web compositing
- * remain separate gates and are not represented as implemented here.
+ * Native camera runtime and temporary capability diagnostic shell.
+ * This is not the final Monument interface; the product UI is composed later
+ * over the camera after native pose/localization has been validated.
  */
 class MainActivity : Activity() {
     private lateinit var glView: GLSurfaceView
@@ -48,7 +49,7 @@ class MainActivity : Activity() {
         }
 
         status = TextView(this).apply {
-            text = "MONUMENT / CAMERA\nCamera is idle"
+            text = "MONUMENT / RUNTIME\nCamera idle"
             textSize = 13f
             setTextColor(0xFFFFFFFF.toInt())
             setBackgroundColor(0xB8000000.toInt())
@@ -94,14 +95,42 @@ class MainActivity : Activity() {
         if (cameraRequested) return
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             pendingStart = true
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.CAMERA),
-                REQUEST_CAMERA_PERMISSION
-            )
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
             return
         }
-        startCameraSession()
+        requestGeospatialConsentOrStart()
+    }
+
+    private fun requestGeospatialConsentOrStart() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            startCameraSession(enableGeospatial = true)
+            return
+        }
+
+        val preferences = getSharedPreferences(PREFERENCES, MODE_PRIVATE)
+        if (preferences.getBoolean(GEOSPATIAL_CONSENT_ACCEPTED, false)) {
+            requestLocationPermission()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Monument location experience")
+            .setMessage("If you continue, Monument can use precise device location and Google's Geospatial services to estimate your position and orientation in the real world. Camera frames are processed by ARCore for spatial tracking. You can continue with camera-only mode if you decline.")
+            .setNegativeButton("CAMERA ONLY") { _, _ -> startCameraSession(enableGeospatial = false) }
+            .setPositiveButton("CONTINUE") { _, _ ->
+                preferences.edit().putBoolean(GEOSPATIAL_CONSENT_ACCEPTED, true).apply()
+                requestLocationPermission()
+            }
+            .setOnCancelListener { startCameraSession(enableGeospatial = false) }
+            .show()
+    }
+
+    private fun requestLocationPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
+            REQUEST_LOCATION_PERMISSION
+        )
     }
 
     override fun onRequestPermissionsResult(
@@ -110,20 +139,27 @@ class MainActivity : Activity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode != REQUEST_CAMERA_PERMISSION) return
-        val granted = ContextCompat.checkSelfPermission(
-            this, Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
-        if (granted && pendingStart) {
-            pendingStart = false
-            startCameraSession()
-        } else {
-            pendingStart = false
-            status.text = "Camera permission was not granted. Allow Camera permission and try again."
+        when (requestCode) {
+            REQUEST_CAMERA_PERMISSION -> {
+                val granted = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+                if (granted && pendingStart) {
+                    pendingStart = false
+                    requestGeospatialConsentOrStart()
+                } else {
+                    pendingStart = false
+                    status.text = "Camera permission was not granted."
+                }
+            }
+            REQUEST_LOCATION_PERMISSION -> {
+                val hasPreciseLocation = ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+                startCameraSession(enableGeospatial = hasPreciseLocation)
+            }
         }
     }
 
-    private fun startCameraSession() {
+    private fun startCameraSession(enableGeospatial: Boolean) {
         if (cameraRequested) return
         try {
             val installStatus = ArCoreApk.getInstance().requestInstall(this, true)
@@ -133,13 +169,39 @@ class MainActivity : Activity() {
             }
 
             val active = session ?: Session(this).also { session = it }
-            // Keep camera startup independent from Geospatial/VPS and Depth capability.
-            active.configure(Config(active))
+            var geospatialConfigured = false
+            val config = Config(active)
+            if (enableGeospatial) {
+                val supported = active.isGeospatialModeSupported(Config.GeospatialMode.ENABLED)
+                if (supported) {
+                    config.geospatialMode = Config.GeospatialMode.ENABLED
+                    try {
+                        active.configure(config)
+                        geospatialConfigured = true
+                    } catch (geoError: Exception) {
+                        status.text = "Geospatial setup unavailable: ${geoError.javaClass.simpleName}. Starting camera-only."
+                        active.configure(Config(active))
+                    }
+                } else {
+                    active.configure(config)
+                    status.text = "This ARCore camera configuration does not support Geospatial. Starting camera-only."
+                }
+            } else {
+                active.configure(config)
+            }
+
             active.resume()
             cameraRequested = true
-            glView.queueEvent { renderer.setSession(active) }
+            glView.queueEvent {
+                renderer.setGeospatialEnabled(geospatialConfigured)
+                renderer.setSession(active)
+            }
             startButton.text = "CAMERA ACTIVE"
-            status.text = "MONUMENT / CAMERA\nStarting ARCore camera feed…"
+            status.text = if (geospatialConfigured) {
+                "MONUMENT / RUNTIME\nCamera starting · Geospatial enabled · waiting for localization"
+            } else {
+                "MONUMENT / RUNTIME\nCamera starting · Geospatial unavailable or not enabled"
+            }
         } catch (e: Exception) {
             cameraRequested = false
             status.text = "Could not start camera: ${e.javaClass.simpleName}: ${e.message ?: "unknown error"}"
@@ -153,7 +215,7 @@ class MainActivity : Activity() {
             runOnUiThread {
                 try { session?.pause() } catch (_: Exception) {}
                 startButton.text = "OPEN CAMERA"
-                status.text = "MONUMENT / CAMERA\nCamera stopped"
+                status.text = "MONUMENT / RUNTIME\nCamera stopped"
             }
         }
     }
@@ -190,6 +252,9 @@ class MainActivity : Activity() {
 
     companion object {
         private const val REQUEST_CAMERA_PERMISSION = 702
+        private const val REQUEST_LOCATION_PERMISSION = 703
+        private const val PREFERENCES = "monument_runtime"
+        private const val GEOSPATIAL_CONSENT_ACCEPTED = "geospatial_consent_accepted"
         private const val EDITOR_URL = "https://monument-field-test-m8cu2wxxp-mos-projects-efbc27a5.vercel.app/"
     }
 }
