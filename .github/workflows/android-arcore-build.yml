@@ -30,10 +30,16 @@ jobs:
       - name: Build debug APK
         working-directory: android
         run: gradle --no-daemon assembleDebug
-      - name: Upload debug APK
+      - name: Record debug APK signing certificate
+        shell: bash
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          "$APKSIGNER" verify --print-certs "$APK" | tee android/app/build/outputs/apk/debug/signing-certificate.txt
+      - name: Upload debug APK and signing certificate
         uses: actions/upload-artifact@v4
         with:
           name: monument-camera-passthrough-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/
           if-no-files-found: error
           retention-days: 7
