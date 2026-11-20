@@ -1,6 +1,6 @@
 # Monument — Persistent Project State / Handoff
-Last updated: 2026-11-20 (camera runtime accepted; Geospatial diagnostics in progress)
-Current focus: enable and validate ARCore Geospatial/VPS on Samsung Galaxy A32 4G (SM-A325F), then compose the approved Monument camera-first UI over the live camera.
+Last updated: 2026-11-20 (camera accepted; Geospatial diagnostic APK built; device validation pending)
+Current focus: test Geospatial/VPS APK on Samsung Galaxy A32 4G (SM-A325F), then compose the approved camera-first UI over native camera.
 
 > **MANDATORY NEXT-CHAT CHECKPOINT:** Before editing code or asking the user to repeat anything, read this handoff and GitHub Issue [#20](https://github.com/Hoohaahaa/Monument/issues/20). The v0.1.0 WebView probe failed, but the v0.2.0 native camera path has now been opened successfully on the user's physical Samsung Galaxy A32 4G, as confirmed by the user on 2026-11-20. Do not repeat the old probe or ask for Editorial View / Publish setup. Camera launch, smooth phone movement/rotation, and STOP/restart are now user-confirmed. Continue with Geospatial/VPS capability and pose diagnostics; do not ask the user to repeat the camera test. The user should not have to re-explain prior failures or tests.
 
@@ -135,3 +135,16 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 
 ## Continuity instructions for future chats / agents
 Read this file, `docs/NEXT_SESSION.md`, `docs/DECISIONS.md`, `docs/product/FIRST_PERSON_GEOSPATIAL_PRODUCT_DIRECTION.md`, `android/README.md`, and open issues #17, #19 and #20 before changing architecture. At the start of every new Monument chat, do this automatically; do not ask the user to remind you. Continue from the current branch; inspect actual repository state and workflow runs. Do not claim implementation, tests, deployment or physical-device behavior unless verified. Update this document after each material change and include commit SHA, workflow run, artifacts, tests, device observations and next exact action. Keep explanations concise and provide working outputs, not only plans.
+
+
+## Short execution path · 2026-11-20
+- **WebView probe v0.1.0 — FAIL:** editor opened; native camera absent. Root cause: no ARCore camera renderer/compositor.
+- **Native camera v0.2.0 — PASS:** user confirmed smooth live feed during movement/rotation and STOP/restart on SM-A325F.
+- **Geospatial diagnostics — IMPLEMENTED:** privacy consent, fine/coarse location flow, runtime Geospatial support check, Earth state, WGS84 pose + H/V/yaw accuracy, async VPS check.
+- **Build #15–#19 — FAIL:** Kotlin nullability mismatch; `Session.earth` is `Earth?`, but renderer treated it as non-null `Earth`.
+- **Fix — COMMITTED:** null-safe Earth handling in `CameraBackgroundRenderer.kt`, commit `442d057e23a12b2d2663c4ebb0656774b785a61f`.
+- **Build #20 — PASS:** [workflow](https://github.com/Hoohaahaa/Monument/actions/runs/44699746664), artifact `14612905251`; ZIP contains `app-debug.apk` (3,938,005 bytes).
+- **Device Geospatial/VPS — PENDING:** no device result yet. Build success is not runtime proof.
+- **Next UI — ISSUE #21:** transparent WebView compositor + versioned native bridge; preserve Camera / Place / Create / Publish. Do not rebuild native-only mock.
+- **After pose validation:** first-person terrain/contours/labels, then world-anchored Surface engine.
+
