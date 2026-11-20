@@ -79,7 +79,7 @@ VPS is a strategically important accuracy layer for Monument, particularly where
 - Synchronous request exceptions are labeled separately as request errors; ARCore result enum values (including network/authorization/resource errors) remain visible by their exact enum name.
 - Request/result metadata is reset when the session or Geospatial mode is reset, and stale callbacks are ignored by request ID.
 - Source commits: `3130fb45e65e49762b6ea942d2bff96346b9041e`, `3714b58c50a8228ad90e9b7c9313287150300512`, `134a424a328f8017b33dbe786264ba2ad812361f`.
-- CI build #42 is running for the final reset/metadata state; do not distribute an APK until the latest run succeeds.
+- CI build #42 completed successfully; the verified APK artifact is documented in the Build #42 section below.
 
 ## Highest-quality positioning strategy and VPS workstream (2026-11-20)
 
