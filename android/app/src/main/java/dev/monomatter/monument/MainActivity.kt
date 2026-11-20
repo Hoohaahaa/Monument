@@ -4,6 +4,10 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.graphics.Color
+import android.view.Gravity
+import android.widget.Button
+import android.widget.FrameLayout
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
@@ -37,7 +41,18 @@ class MainActivity : Activity() {
             addJavascriptInterface(MonumentBridge(), "MonumentAR")
             loadUrl("https://monument-field-test-m8cu2wxxp-mos-projects-efbc27a5.vercel.app/")
         }
-        setContentView(webView)
+        val root = FrameLayout(this)
+        root.addView(webView, FrameLayout.LayoutParams(-1, -1))
+        val probeButton = Button(this).apply {
+            text = "START GEOSPATIAL DEVICE CHECK"
+            setTextColor(Color.WHITE)
+            setBackgroundColor(Color.rgb(20, 35, 29))
+            setOnClickListener { startSession() }
+        }
+        val buttonParams = FrameLayout.LayoutParams(-1, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.TOP)
+        buttonParams.setMargins(20, 48, 20, 0)
+        root.addView(probeButton, buttonParams)
+        setContentView(root)
     }
 
     inner class MonumentBridge {
@@ -78,32 +93,37 @@ class MainActivity : Activity() {
     }
 
     private fun startSession() {
-        worker.execute {
-            try {
-                val installStatus = ArCoreApk.getInstance().requestInstall(this, true)
-                if (installStatus == ArCoreApk.InstallStatus.INSTALL_REQUESTED) {
-                    emit(JSONObject().put("type", "state").put("state", "arcore-install-requested"))
-                    return@execute
-                }
-                val active = session ?: Session(this).also { session = it }
-                val geoSupported = active.isGeospatialModeSupported(Config.GeospatialMode.ENABLED)
-                val depthSupported = active.isDepthModeSupported(Config.DepthMode.AUTOMATIC)
-                if (!geoSupported) {
-                    emit(JSONObject().put("type", "capabilities").put("arcore", true)
-                        .put("geospatial", false).put("depth", depthSupported).put("state", "geospatial-unsupported"))
-                    return@execute
-                }
-                val config = active.config
-                config.geospatialMode = Config.GeospatialMode.ENABLED
-                if (depthSupported) config.depthMode = Config.DepthMode.AUTOMATIC
-                active.configure(config)
-                active.resume()
-                emit(JSONObject().put("type", "capabilities").put("arcore", true)
-                    .put("geospatial", true).put("depth", depthSupported).put("state", "localizing"))
-                startPolling(active)
-            } catch (e: Exception) {
-                emit(JSONObject().put("type", "error").put("message", e.javaClass.simpleName + ": " + (e.message ?: "unknown")))
+        if (!hasPermissions()) {
+            pendingStart = true
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION),
+                REQUEST_PERMISSIONS)
+            return
+        }
+        try {
+            val installStatus = ArCoreApk.getInstance().requestInstall(this, true)
+            if (installStatus == ArCoreApk.InstallStatus.INSTALL_REQUESTED) {
+                emit(JSONObject().put("type", "state").put("state", "arcore-install-requested"))
+                return
             }
+            val active = session ?: Session(this).also { session = it }
+            val geoSupported = active.isGeospatialModeSupported(Config.GeospatialMode.ENABLED)
+            val depthSupported = active.isDepthModeSupported(Config.DepthMode.AUTOMATIC)
+            if (!geoSupported) {
+                emit(JSONObject().put("type", "capabilities").put("arcore", true)
+                    .put("geospatial", false).put("depth", depthSupported).put("state", "geospatial-unsupported"))
+                return
+            }
+            val config = active.config
+            config.geospatialMode = Config.GeospatialMode.ENABLED
+            if (depthSupported) config.depthMode = Config.DepthMode.AUTOMATIC
+            active.configure(config)
+            active.resume()
+            emit(JSONObject().put("type", "capabilities").put("arcore", true)
+                .put("geospatial", true).put("depth", depthSupported).put("state", "localizing"))
+            startPolling(active)
+        } catch (e: Exception) {
+            emit(JSONObject().put("type", "error").put("message", e.javaClass.simpleName + ": " + (e.message ?: "unknown")))
         }
     }
 
