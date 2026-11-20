@@ -211,3 +211,13 @@ Work is isolated on branch `feature/geospatial-camera-overlay`; the existing pre
 This is a compass-registered geographic camera preview, not ARCore Geospatial/VPS and not a persistent world-locked terrain mesh. The drawn lines are an azimuth reference grid, explicitly not terrain geometry. Browser device orientation does not provide a reliable full camera pose or camera calibration; therefore this prototype must not be described as sub-meter AR or as accurately draped over the ground. Nearby labels are projected from bearing and approximate horizontal field of view. Physical Android testing is required.
 
 Next engineering gate: validate on a real Android phone; then choose and implement the supported native ARCore Geospatial/VPS path for true world-locked placement. Keep the web preview as a graceful fallback and retain the accuracy gating.
+
+
+## 2026-11-20 — First-person geospatial direction confirmed
+
+- User explicitly selected **First Person** as Monument's primary experience. The phone camera is the user's viewpoint at their real geographic location; phone movement must change the view of the geographic world and anchored content.
+- Globe / Orbit is secondary navigation only. The intended continuous experience is globe → region → local terrain → first-person camera.
+- The authoritative product and technical direction is now documented in `docs/product/FIRST_PERSON_GEOSPATIAL_PRODUCT_DIRECTION.md`. Read it before any further implementation; it defines the visual direction, Surface collection schema, renderer/pose/anchor responsibilities, Android-first browser delivery strategy, ARCore Geospatial integration gates, limitations, rejected paths and acceptance criteria.
+- Important technical distinction: ARCore Geospatial is a native Android SDK, not a browser JavaScript API. It combines sensors/GPS with VPS where available and supports WGS84, Terrain and Rooftop anchors. A high-fidelity browser-first product may require a small Android host/bridge for the AR session while retaining the web UI for authoring and content.
+- The current Three.js globe / single elevation tile and compass overlay are explicitly prototypes, not the desired First Person Earth experience.
+- No ARCore implementation or device validation is claimed by this documentation commit. The next engineering task is a compatibility / native proof-of-capability on the actual target Android device, while preserving the no-install browser baseline.
