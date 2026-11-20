@@ -43,7 +43,7 @@ See [migration status](docs/architecture/MIGRATION_STATUS.md) before treating th
 
 ## Native Android / ARCore bridge
 
-- [Android ARCore bridge probe](android/README.md) — previous capability-only scaffold; **not a working camera app**. The installed probe failed user acceptance (no camera preview). See [Issue #20](https://github.com/Hoohaahaa/Monument/issues/20) and the mandatory [project handoff](docs/PROJECT_STATE_AND_HANDOFF.md) before continuing.
+- [Android camera runtime](android/README.md) — native ARCore camera-passthrough milestone v0.2.0. First verify live camera on the target phone before adding Geospatial/terrain. The previous v0.1 probe failed user acceptance; see [Issue #20](https://github.com/Hoohaahaa/Monument/issues/20).
 - [Samsung Galaxy A32 compatibility assessment](docs/device/SAMSUNG_GALAXY_A32_ARCORE_ASSESSMENT.md) — official catalogue findings and runtime verification steps.
 
 ## Working rules
