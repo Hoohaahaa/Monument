@@ -139,3 +139,15 @@ Last updated: 2026-11-20
 2. When the user has time, collect the exact on-device VPS line plus H/V/yaw ranges; do not ask for another location trip.
 3. Continue implementation independently: inspect MainActivity, renderer, manifest/Gradle, index.html, app JS/CSS, and engine/native-arcore-bridge.js; then implement the transparent WebView compositor and versioned native bridge while preserving the approved camera-first UI and native ARCore camera. Avoid a second browser getUserMedia() stream.
 4. Update this handoff and decision log after each meaningful implementation choice, including alternatives not selected and why.
+
+
+## Latest user field report + next diagnostic build (2026-11-20)
+
+- User reports that after moving, Build #42 still shows `VPS: UNAVAILABLE · CURRENT`; query age was around 90 seconds. They asked whether further movement is necessary. **Answer: no further travel is needed now.**
+- Explain the `@...` suffix: it is query latitude, longitude in decimal degrees, rounded to 3 decimals, not an error ID. Latitude appears first. Protect exact coordinates; only ask for the rounded suffix if needed.
+- Important: automatic query runs after >=100 m movement from the previous query point, or every 5 minutes. A shorter move may leave the old query in place. `CURRENT` only means query age <5 min; it does not prove it checked the new location.
+- I inspected the renderer. Added query-to-current-pose distance and pose age to the diagnostic line, plus a manual `RECHECK VPS AT CURRENT LOCATION` button. It uses the latest ARCore tracked pose and has a 30-second cooldown to avoid accidental quota use.
+- Commits: renderer `468c0a6e67547a23bc62c8ce5cb725f0cc4ffb6f`; MainActivity `593652452c1b272b0b7dbf6c27b414bb53660ebd`.
+- Build #44 is queued: https://github.com/Hoohaahaa/Monument/actions/runs/44742066355. Wait for success and inspect APK/signature before sharing.
+- Once Build #44 is installed (only when convenient), user does not need to move: tap the manual recheck button once at the current spot. Read `pose Δ...m`. If delta is small and result remains UNAVAILABLE, accept VPS unavailable at that point and stop repeated tests there. Continue GPS/visual-inertial + local-reference layers. Do not make VPS a global dependency.
+- If the result is an explicit `ERROR_NOT_AUTHORIZED` or `ERROR_NETWORK_CONNECTION`, investigate Cloud project/OAuth/network separately. A clean `UNAVAILABLE` is not an auth/network failure.
