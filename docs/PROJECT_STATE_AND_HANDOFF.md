@@ -1,8 +1,8 @@
 # Monument — Persistent Project State / Handoff
-Last updated: 2026-11-20 (updated after user confirmed camera launch)
-Current focus: replace the failed non-camera ARCore probe with a real Android camera passthrough runtime for Samsung Galaxy A32 4G (SM-A325F).
+Last updated: 2026-11-20 (camera runtime accepted; Geospatial diagnostics in progress)
+Current focus: enable and validate ARCore Geospatial/VPS on Samsung Galaxy A32 4G (SM-A325F), then compose the approved Monument camera-first UI over the live camera.
 
-> **MANDATORY NEXT-CHAT CHECKPOINT:** Before editing code or asking the user to repeat anything, read this handoff and GitHub Issue [#20](https://github.com/Hoohaahaa/Monument/issues/20). The v0.1.0 WebView probe failed, but the v0.2.0 native camera path has now been opened successfully on the user's physical Samsung Galaxy A32 4G, as confirmed by the user on 2026-11-20. Do not repeat the old probe or ask for Editorial View / Publish setup. Continue with camera stability/motion/restart validation and Geospatial/VPS capability diagnostics as separate gates. The user should not have to re-explain prior failures or tests.
+> **MANDATORY NEXT-CHAT CHECKPOINT:** Before editing code or asking the user to repeat anything, read this handoff and GitHub Issue [#20](https://github.com/Hoohaahaa/Monument/issues/20). The v0.1.0 WebView probe failed, but the v0.2.0 native camera path has now been opened successfully on the user's physical Samsung Galaxy A32 4G, as confirmed by the user on 2026-11-20. Do not repeat the old probe or ask for Editorial View / Publish setup. Camera launch, smooth phone movement/rotation, and STOP/restart are now user-confirmed. Continue with Geospatial/VPS capability and pose diagnostics; do not ask the user to repeat the camera test. The user should not have to re-explain prior failures or tests.
 
 This file is the durable continuity record. Read it first when continuing Monument work in a new chat. Update it after every meaningful implementation, decision, test, failure, or deployment. Do not rely on chat history alone.
 
@@ -69,9 +69,16 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Geospatial and Depth are intentionally NOT enabled in this milestone. This separates basic camera availability from Geospatial/VPS/Depth capability and avoids making the first gate harder to diagnose.
 - The editor is intentionally separate because current web UI is opaque. Transparent WebView overlay and actual Monument UI compositing are still not implemented.
 - Current scope is camera passthrough only. No terrain, Cairn grid, spatial surfaces, WGS84 anchors, VPS or occlusion are rendered yet.
-- Physical device result: user confirms that OPEN CAMERA opens the camera on the SM-A325F. This is a successful camera-launch gate. The user has not separately reported sustained frame stability during movement, STOP/restart behavior, Geospatial/VPS localization, or Depth support.
+- Physical device result (user-confirmed): live camera opens, remains smooth while the phone moves/rotates, and STOP/restart works on SM-A325F. This closes the camera runtime acceptance gate. Geospatial/VPS localization and Depth support remain unknown.
 - Android docs: android/README.md. Decision log: docs/DECISIONS.md. Compact next-session checklist: docs/NEXT_SESSION.md.
 - Tracking issue: https://github.com/Hoohaahaa/Monument/issues/20
+
+## Geospatial/VPS diagnostics implementation — CI/device validation pending
+- MainActivity now requests explicit user consent before Geospatial location use, requests precise + coarse location permissions, checks `Session.isGeospatialModeSupported`, and enables `Config.GeospatialMode.ENABLED` only when supported and precise location is granted. Camera-only fallback remains available.
+- CameraBackgroundRenderer reads Earth tracking/state and, only while Earth is TRACKING, reports WGS84 latitude/longitude, ellipsoid altitude, horizontal/vertical accuracy and orientation yaw accuracy. It starts one asynchronous `Session.checkVpsAvailabilityAsync` request at the localized camera position and reports the result.
+- This remains a diagnostic shell. The native OPEN CAMERA / STOP / OPEN EDITOR controls and status panel are not the final Monument UI. Preserve the approved camera-first web experience and Camera / Place / Create / Publish actions; next UI milestone is transparent composition over the native camera, not a replacement interface.
+- VPS cloud authorization is not yet verified. `ERROR_NOT_AUTHORIZED` indicates project/app authorization setup, not absence of VPS coverage. No Geospatial result has yet been observed on the physical phone.
+- CI runs #15 (44699268900) and #16 (44699272579) were triggered during this implementation; a final platform AlertDialog import correction was pushed after those runs. Check the latest run before sharing an APK.
 
 ## Build history
 - v0.2.0 camera passthrough workflow run #10: https://github.com/Hoohaahaa/Monument/actions/runs/44698143221 — SUCCESS, commit a16039a14d16ec0ec1c7547c8c5450978c58a4d3. Artifact ID 14611343158 (monument-camera-passthrough-debug, ZIP 3,193,233 bytes); APK inside 3,938,005 bytes. This artifact includes the native camera-first Activity, GL camera renderer, lifecycle fixes and correct exception import.
@@ -90,9 +97,10 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - v0.1.0 probe APK WAS installed and launched on the user's physical SM-A325F and failed camera acceptance (no live camera feed). This result is recorded above. v0.2.0 camera launch has been confirmed by the user on the physical phone. No Geospatial/VPS or Depth support result is known yet.
 
 ## Open work / next steps
-1. Camera launch on the physical SM-A325F is user-confirmed for v0.2.0. Do not repeat the basic install/open test.
-2. Validate that live frames remain stable while rotating/moving the phone and that STOP -> OPEN CAMERA restart works. If either fails, inspect Logcat and fix Session / GL / texture / lifecycle before proceeding.
-3. Add Geospatial runtime capability diagnostics; query VPS availability at the device's current test location and record tracking state, horizontal/vertical accuracy and heading accuracy. Do not infer support from the camera launch.
+1. Camera runtime is accepted on SM-A325F: user confirmed smooth live frames during phone movement/rotation and working STOP/restart.
+2. Verify latest Geospatial diagnostics CI build. Install only a successful new APK.
+3. On device, accept the location disclosure and precise location permission. Record Geospatial support/configuration, Earth state, WGS84 pose, horizontal/vertical/yaw accuracy and VPS result. Distinguish NOT_AUTHORIZED from UNAVAILABLE.
+4. After localization validation, build the transparent compositor and restore the approved Monument camera-first interface; the current native control screen is diagnostic-only.
 5. Implement a transparent WebView/native composition layer only after the camera renderer is stable; editor must not obscure camera.
 6. Feed validated camera pose into the shared local ENU/EUS frame and first-person Earth renderer.
 7. Evaluate CesiumJS or equivalent multi-resolution terrain and Cairn-inspired grid/contours.
@@ -102,7 +110,7 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 ## Acceptance gates (must not skip)
 - Build success is not runtime success.
 - Runtime capability probe on actual SM-A325F is required.
-- Camera launch is user-confirmed on the physical phone; sustained frame stability, phone-motion behavior and STOP/restart still need explicit validation before declaring the camera runtime fully stable.
+- Camera runtime is user-accepted on the physical phone: smooth live frames while moving/rotating and STOP/restart work. Geospatial pose and world-locking are not yet validated.
 - Pose must track phone movement with stable orientation and accuracy before claiming world-locked first person.
 - Terrain must be geographic, multi-resolution and centered around user's location before calling it a real Earth/Terrain view.
 - Surface must stay at the same real-world anchor after phone movement and relaunch before calling it persistent.
@@ -119,6 +127,7 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Deferred: promising Depth/occlusion on A32. Reason: must be checked at runtime; device catalogue and installed AR Services are not sufficient.
 - Deferred: full VPS/Geospatial claims before live A32 and location testing. Reason: hardware/API availability and geographic VPS coverage are separate.
 - Every future path not selected must be recorded here with rationale; create/update GitHub issues for untracked work.
+- Final native interface must not remain the temporary three-button diagnostic shell. Preserve the accepted camera-first shell and Camera / Place / Create / Publish actions, composed transparently over the native camera.
 
 ## Continuity instructions for future chats / agents
 Read this file, `docs/NEXT_SESSION.md`, `docs/DECISIONS.md`, `docs/product/FIRST_PERSON_GEOSPATIAL_PRODUCT_DIRECTION.md`, `android/README.md`, and open issues #17, #19 and #20 before changing architecture. At the start of every new Monument chat, do this automatically; do not ask the user to remind you. Continue from the current branch; inspect actual repository state and workflow runs. Do not claim implementation, tests, deployment or physical-device behavior unless verified. Update this document after each material change and include commit SHA, workflow run, artifacts, tests, device observations and next exact action. Keep explanations concise and provide working outputs, not only plans.
