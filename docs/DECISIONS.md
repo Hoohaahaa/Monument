@@ -57,3 +57,20 @@ This file records accepted decisions and rejected paths so future sessions do no
 **Not selected:** Make VPS a hard prerequisite for Monument or pause all development until VPS is available in the user's current region. Reason: this would make the product unusable in uncovered areas and conflate a location-specific Google service with Monument's own positioning architecture.
 
 **Current field status:** The user still reports VPS: UNAVAILABLE; the planned >=100 m movement test has not yet been performed. The installed build number for this latest report is not confirmed. Do not infer regional unavailability from this one location/result, and do not ask the user to travel solely for this test.
+
+
+## 2026-11-20 — Optimize for highest reliable positioning quality, not VPS dependency
+
+**Decision:** Monument should seek the highest reliable global pose available from ARCore Geospatial, using VPS-assisted visual localization whenever coverage and runtime convergence permit. VPS is a preferred global accuracy enhancer, not a prerequisite for all Monument features. The quality gate is the live pose's measured H/V/yaw uncertainty and stability over time, not the AVAILABLE enum or TRACKING state alone.
+
+**Technical expectation:** Google's ARCore documentation describes typical VPS-covered performance as positional accuracy better than 5 m and often around 1 m, with rotational accuracy better than 5 degrees. These are typical expectations, not guarantees. GPS may be sufficient in open-sky outdoor environments. Do not promise centimetre-level precision from ARCore Geospatial/VPS.
+
+**Required diagnostic separation:** Device/API support; Cloud API and OAuth authorization; network/service errors; location-specific VPS coverage; and live pose convergence/accuracy are separate conditions. Preserve exact availability/error enums, query time and freshness, privacy-safe queried coordinates, app/build identity, and current H/V/yaw measurements. Never mislabel network/auth errors as no coverage.
+
+**Field optimization when VPS is available:** Allow convergence and encourage slow scanning of visually distinctive, static, well-lit surroundings likely represented in Street View. This is a convergence aid, not a coverage workaround or guarantee.
+
+**Placement policy:** Use rolling H/V/yaw uncertainty and stability thresholds tailored to each placement use case. Keep WGS84 ellipsoid altitude distinct from Terrain and Rooftop anchor altitude semantics. Keep local surveyed/reference calibration available for precision-sensitive relative placement; local calibration does not itself prove global correctness. Consider RTK/survey-grade inputs only if measured product requirements justify the added system complexity.
+
+**Not selected:** Make VPS the sole positioning engine, block the app or all publishing when VPS is unavailable, or switch engines merely to work around one UNAVAILABLE result. Reason: coverage is location-specific; Geospatial may operate with GPS and Monument has a separately approved local-reference layer.
+
+**Build verification:** Build #42 succeeded on commit 134a424a328f8017b33dbe786264ba2ad812361f; APK artifact 14627550889 is verified. User has not yet installed it or confirmed its on-device VPS output. The earlier UNAVAILABLE report does not verify the latest re-query diagnostics.
