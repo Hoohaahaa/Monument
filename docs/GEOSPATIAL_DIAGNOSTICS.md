@@ -144,3 +144,10 @@ If the new build shows `pose Δ0–20m` (or another small value) while `UNAVAILA
 - Signing SHA-1: `eb565d1f058175eeb0a5c0c4d7233d99bade6867`, matching the established OAuth signing identity; install-over should work.
 - Build adds latest tracked-pose age and query-to-pose distance (`pose Δ`) plus `RECHECK VPS AT CURRENT LOCATION`, rate-limited with a 30-second cooldown. Manual recheck uses the latest tracked ARCore pose; no user relocation is needed.
 - Next user action, only when convenient: install as an update, tap the manual recheck once, then report VPS enum and `pose Δ`/pose age. Do not ask for more movement. If delta is small and result is fresh UNAVAILABLE, stop local retries at that point and continue the approved non-VPS layers.
+
+
+## 2026-11-20 — Diagnosis of missing on-screen VPS data
+
+User reported no requested diagnostics in the installed app. Code review found the native status callback was only routed to the WebView via `monument:arcore`, but the page never started the native ARCore session: its camera handler still invoked browser `getUserMedia()` unconditionally. The native VPS controls also were not part of the visible root view hierarchy. This explains why a camera could open while the native geospatial telemetry and manual VPS recheck remained absent.
+
+The correction routes native Android camera launch through `window.MonumentNativeAR.start()`, exposes native `recheckVps()` to JS, and adds a visible `RECHECK VPS` HUD control. The current branch preview was deployed and its `index.html`, `app.js`, and bridge JS were checked over HTTP 200. Build #48 compiled the native bridge change, but Build #49 is the candidate that points at the stable branch preview and must be verified before delivery. Do not ask the user to move; one same-place check only after a verified build.
