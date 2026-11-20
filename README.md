@@ -49,3 +49,7 @@ See [migration status](docs/architecture/MIGRATION_STATUS.md) before treating th
 ## Working rules
 
 Evidence before certainty. Product autonomy and explicit integration contracts. Smallest sufficient architecture. Least privilege and data minimization. Distinguish proposed, implemented, tested, and operational states. Document alternatives, failure paths, costs, and revisit conditions.
+
+## Persistent project context
+
+For the current product definition, architecture decisions, implementation status, build history, rejected paths, and next steps, read [docs/PROJECT_STATE_AND_HANDOFF.md](docs/PROJECT_STATE_AND_HANDOFF.md) first. Keep this handoff updated after every material change so work can continue across chats without losing context.
