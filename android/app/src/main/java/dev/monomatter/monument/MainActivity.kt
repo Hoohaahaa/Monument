@@ -4,6 +4,12 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.webkit.JavascriptInterface
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import org.json.JSONObject
 import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
@@ -26,6 +32,7 @@ import com.google.ar.core.Session
  */
 class MainActivity : Activity() {
     private lateinit var glView: GLSurfaceView
+    private lateinit var webView: WebView
     private lateinit var renderer: CameraBackgroundRenderer
     private lateinit var status: TextView
     private lateinit var startButton: Button
@@ -38,12 +45,21 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
 
         renderer = CameraBackgroundRenderer { message ->
-            runOnUiThread { status.text = message }
+            runOnUiThread {
+                status.text = message
+                if (::webView.isInitialized) {
+                    val quoted = JSONObject.quote(message)
+                    webView.evaluateJavascript("window.dispatchEvent(new CustomEvent('monument:arcore',{detail:{type:'state',message:$quoted}}));", null)
+                }
+            }
         }
         renderer.setDisplayRotation(windowManager.defaultDisplay.rotation)
 
         glView = GLSurfaceView(this).apply {
             setEGLContextClientVersion(2)
+            setEGLConfigChooser(8, 8, 8, 8, 16, 0)
+            holder.setFormat(android.graphics.PixelFormat.TRANSLUCENT)
+            setZOrderMediaOverlay(true)
             preserveEGLContextOnPause = false
             setRenderer(renderer)
             renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
@@ -98,13 +114,45 @@ class MainActivity : Activity() {
             addView(actionRow, LinearLayout.LayoutParams(-1, -2))
         }
 
+        webView = WebView(this).apply {
+            setBackgroundColor(Color.TRANSPARENT)
+            setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.mediaPlaybackRequiresUserGesture = true
+            webChromeClient = WebChromeClient()
+            webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    val js = "document.documentElement.style.background='transparent';document.body.style.background='transparent';const s=document.querySelector('.shell');if(s)s.style.background='transparent';const st=document.querySelector('.stage');if(st)st.style.background='transparent';const c=document.querySelector('.camera');if(c)c.style.background='transparent';const p=document.getElementById('placeholder');if(p)p.style.display='none';const v=document.getElementById('video');if(v)v.style.display='none';const h=document.getElementById('hud');if(h)h.style.display='block';"
+                    evaluateJavascript(js, null)
+                }
+            }
+            addJavascriptInterface(MonumentJavascriptBridge(), "MonumentAR")
+            loadUrl(EDITOR_URL)
+        }
+
         val root = FrameLayout(this)
         root.addView(glView, FrameLayout.LayoutParams(-1, -1))
+        root.addView(webView, FrameLayout.LayoutParams(-1, -1))
         val statusParams = FrameLayout.LayoutParams(-1, -2, Gravity.TOP)
         statusParams.setMargins(12, 36, 12, 0)
-        root.addView(status, statusParams)
-        root.addView(controls, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM))
+        // The transparent web shell owns visible controls; native diagnostics are bridged into the page.
         setContentView(root)
+    }
+
+    private inner class MonumentJavascriptBridge {
+        @JavascriptInterface
+        fun startGeospatial() { runOnUiThread { requestAndStartCamera() } }
+
+        @JavascriptInterface
+        fun stopGeospatial() { runOnUiThread { stopCamera() } }
+
+        @JavascriptInterface
+        fun getRuntimeInfo(): String {
+            val active = cameraRequested
+            return "{\"bridgeVersion\":1,\"platform\":\"android\",\"cameraActive\":$active}"
+        }
     }
 
     private fun requestAndStartCamera() {
@@ -249,10 +297,12 @@ class MainActivity : Activity() {
                 }
             }
             glView.onResume()
+            if (::webView.isInitialized) webView.onResume()
         }
     }
 
     override fun onPause() {
+        if (::webView.isInitialized) webView.onPause()
         if (::glView.isInitialized) glView.onPause()
         try { session?.pause() } catch (_: Exception) {}
         super.onPause()
@@ -263,6 +313,7 @@ class MainActivity : Activity() {
         try { session?.pause() } catch (_: Exception) {}
         try { session?.close() } catch (_: Exception) {}
         session = null
+        if (::webView.isInitialized) { webView.removeJavascriptInterface("MonumentAR"); webView.destroy() }
         super.onDestroy()
     }
 
