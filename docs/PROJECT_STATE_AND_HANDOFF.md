@@ -1,8 +1,8 @@
 # Monument — Persistent Project State / Handoff
-Last updated: 2026-11-20
+Last updated: 2026-11-20 (updated after user confirmed camera launch)
 Current focus: replace the failed non-camera ARCore probe with a real Android camera passthrough runtime for Samsung Galaxy A32 4G (SM-A325F).
 
-> **MANDATORY NEXT-CHAT CHECKPOINT:** Before editing code, building another APK, or asking the user to repeat anything, read this handoff and GitHub Issue [#20](https://github.com/Hoohaahaa/Monument/issues/20). The last APK was physically installed and opened by the user, but it did not open a live camera. Do not treat that probe as a working camera app, do not ask the user to configure Editorial View or Publish, and do not repeat the same probe build. First inspect the current branch and MainActivity.kt; implement the GL camera passthrough/compositor described below. Only ask the user to install a replacement APK after a new build is ready. The user should not have to re-explain this failure in a future chat.
+> **MANDATORY NEXT-CHAT CHECKPOINT:** Before editing code or asking the user to repeat anything, read this handoff and GitHub Issue [#20](https://github.com/Hoohaahaa/Monument/issues/20). The v0.1.0 WebView probe failed, but the v0.2.0 native camera path has now been opened successfully on the user's physical Samsung Galaxy A32 4G, as confirmed by the user on 2026-11-20. Do not repeat the old probe or ask for Editorial View / Publish setup. Continue with camera stability/motion/restart validation and Geospatial/VPS capability diagnostics as separate gates. The user should not have to re-explain prior failures or tests.
 
 This file is the durable continuity record. Read it first when continuing Monument work in a new chat. Update it after every meaningful implementation, decision, test, failure, or deployment. Do not rely on chat history alone.
 
@@ -45,7 +45,7 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Existing web preview from earlier prototype: https://monument-field-test-m8cu2wxxp-mos-projects-efbc27a5.vercel.app/
 - Production alias has NOT been changed. Never change production without explicit user approval.
 
-## Physical-device feedback and confirmed blocker (2026-11-20)
+## Physical-device feedback and confirmed blocker — v0.1.0 (2026-11-20)
 - User installed and opened the current APK on the Samsung Galaxy A32 4G.
 - Reported behavior: app launches, but no live camera preview appears. Tapping Open Camera asks for permission and then returns to the web Create/Surface/Editorial View workflow; Publish does not start a camera.
 - Root cause confirmed in `MainActivity.kt`: the APK loads the old Earth Mesh preview in a WebView and adds a capability-check button. There is no GL camera renderer, no ARCore camera texture binding, and no camera/WebView compositor. The web Open Camera action is therefore not connected to a native camera runtime.
@@ -69,13 +69,13 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Geospatial and Depth are intentionally NOT enabled in this milestone. This separates basic camera availability from Geospatial/VPS/Depth capability and avoids making the first gate harder to diagnose.
 - The editor is intentionally separate because current web UI is opaque. Transparent WebView overlay and actual Monument UI compositing are still not implemented.
 - Current scope is camera passthrough only. No terrain, Cairn grid, spatial surfaces, WGS84 anchors, VPS or occlusion are rendered yet.
-- This source has not yet been validated on the physical SM-A325F. CI compile success is not proof that camera feed appears on-device.
+- Physical device result: user confirms that OPEN CAMERA opens the camera on the SM-A325F. This is a successful camera-launch gate. The user has not separately reported sustained frame stability during movement, STOP/restart behavior, Geospatial/VPS localization, or Depth support.
 - Android docs: android/README.md. Decision log: docs/DECISIONS.md. Compact next-session checklist: docs/NEXT_SESSION.md.
 - Tracking issue: https://github.com/Hoohaahaa/Monument/issues/20
 
 ## Build history
 - v0.2.0 camera passthrough workflow run #10: https://github.com/Hoohaahaa/Monument/actions/runs/44698143221 — SUCCESS, commit a16039a14d16ec0ec1c7547c8c5450978c58a4d3. Artifact ID 14611343158 (monument-camera-passthrough-debug, ZIP 3,193,233 bytes); APK inside 3,938,005 bytes. This artifact includes the native camera-first Activity, GL camera renderer, lifecycle fixes and correct exception import.
-- Follow-up run #12: https://github.com/Hoohaahaa/Monument/actions/runs/44698291433 — building the later diagnostic-only change that displays “Waiting for first camera frame” instead of prematurely saying the camera is live. Run #10 artifact is usable for the camera passthrough device test; #12 is not yet needed to test the core camera path.
+- Follow-up run #12: https://github.com/Hoohaahaa/Monument/actions/runs/44698291433 — SUCCESS, commit 4b5818e96ad5e17ec29d7195f0dbac8de5bd4e48; diagnostic-only change that distinguishes camera startup from the first live frame.
 - Intermediate CI run #6 failed at Kotlin compile: wrong CameraNotAvailableException package and stale probe MainActivity references to JSONObject. Fixed by importing com.google.ar.core.exceptions.CameraNotAvailableException and replacing the old WebView probe Activity with the native camera-first Activity. Do not treat that failed run as the current code result.
 - Artifact name: monument-camera-passthrough-debug. Verified run #10 APK was downloaded and extracted in the current session to /mnt/data/monument-camera-passthrough-run10/app-debug.apk. This path is valid for this session only; re-verify before reusing in another session.
 - Workflow: `.github/workflows/android-arcore-build.yml`
@@ -87,13 +87,12 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Artifact ID: `14610956314`
 - Artifact size: 3,190,719 bytes ZIP; APK inside is 3,938,017 bytes.
 - APK was downloaded and extracted in the assistant working runtime at `/mnt/data/monument-arcore-probe/app-debug.apk`. This is a verified path for the current session only; do not reuse it in another session without checking.
-- v0.1.0 probe APK WAS installed and launched on the user's physical SM-A325F and failed camera acceptance (no live camera feed). This result is recorded above. No v0.2.0 physical-device test has happened yet. No Geospatial/Depth support result is known yet.
+- v0.1.0 probe APK WAS installed and launched on the user's physical SM-A325F and failed camera acceptance (no live camera feed). This result is recorded above. v0.2.0 camera launch has been confirmed by the user on the physical phone. No Geospatial/VPS or Depth support result is known yet.
 
 ## Open work / next steps
-1. Check workflow run #10 and fix any compile/build failure. Verify the produced v0.2.0 APK artifact before sharing.
-2. User installs v0.2.0 and confirms that OPEN CAMERA shows live camera passthrough. No Editorial View / Publish setup is required.
-3. If camera fails, inspect Logcat and fix native Session / GL / texture / lifecycle issues before proceeding.
-4. After camera acceptance, add Geospatial and Depth runtime capability diagnostics as a separate gate; check VPS availability on-device and record accuracy.
+1. Camera launch on the physical SM-A325F is user-confirmed for v0.2.0. Do not repeat the basic install/open test.
+2. Validate that live frames remain stable while rotating/moving the phone and that STOP -> OPEN CAMERA restart works. If either fails, inspect Logcat and fix Session / GL / texture / lifecycle before proceeding.
+3. Add Geospatial runtime capability diagnostics; query VPS availability at the device's current test location and record tracking state, horizontal/vertical accuracy and heading accuracy. Do not infer support from the camera launch.
 5. Implement a transparent WebView/native composition layer only after the camera renderer is stable; editor must not obscure camera.
 6. Feed validated camera pose into the shared local ENU/EUS frame and first-person Earth renderer.
 7. Evaluate CesiumJS or equivalent multi-resolution terrain and Cairn-inspired grid/contours.
@@ -103,7 +102,7 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 ## Acceptance gates (must not skip)
 - Build success is not runtime success.
 - Runtime capability probe on actual SM-A325F is required.
-- Camera passthrough must visibly work before claiming camera AR.
+- Camera launch is user-confirmed on the physical phone; sustained frame stability, phone-motion behavior and STOP/restart still need explicit validation before declaring the camera runtime fully stable.
 - Pose must track phone movement with stable orientation and accuracy before claiming world-locked first person.
 - Terrain must be geographic, multi-resolution and centered around user's location before calling it a real Earth/Terrain view.
 - Surface must stay at the same real-world anchor after phone movement and relaunch before calling it persistent.
