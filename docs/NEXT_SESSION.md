@@ -100,3 +100,12 @@ Last updated: 2026-11-20
 - Engineering work to continue meanwhile: formalize the versioned spatial data contract and quality/provenance model; preserve the three localization layers; proceed with the transparent WebView compositor and native bridge without making VPS a hard dependency.
 - Before implementing precision-sensitive placement, add diagnostics for VPS query timestamp, freshness, privacy-safe queried location, and distinct network/auth/resource errors. Do not confuse UNAVAILABLE with an error.
 - Current field evidence is limited to one user's reported location(s) in Iran. It does not establish nationwide VPS coverage or lack of coverage.
+
+## VPS query provenance update — 2026-11-20
+- Renderer now reports the exact availability enum together with CURRENT/STALE state, query age, result age/pending, and rounded queried coordinates.
+- Query result time and location metadata reset on new Session / Geospatial mode; callbacks from older requests are ignored.
+- Exact ARCore result enum names remain visible so UNAVAILABLE is distinguishable from network/auth/resource errors; synchronous thrown exceptions show a separate request-error label.
+- Coordinates are rounded to 3 decimal places for the on-device diagnostic line; no location history is uploaded or persisted by this renderer.
+- Source commits: `3130fb45e65e49762b6ea942d2bff96346b9041e`, `3714b58c50a8228ad90e9b7c9313287150300512`, `134a424a328f8017b33dbe786264ba2ad812361f`.
+- Latest build #42 for commit `134a424a328f8017b33dbe786264ba2ad812361f` is in progress. Verify its final CI result and artifact before sharing another APK.
+- User's >=100 m movement test remains pending and is not required immediately.
