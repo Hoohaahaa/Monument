@@ -10,7 +10,7 @@
 - New v0.2.0 code adds a native camera-first activity and a GLES/ARCore camera background renderer.
 - New code is committed to feature/android-arcore-geospatial-bridge.
 - Verified camera-passthrough APK: run #10, ID 44698143221, SUCCESS; artifact ID 14611343158. This build contains the core native camera implementation and is ready for A32 testing.
-- Follow-up run #12 (44698291433) succeeded. New Geospatial diagnostic implementation is committed; CI runs #15 (44699268900) and #16 (44699272579) were started for the initial implementation and are being checked. A final import correction was pushed after those runs.
+- Follow-up run #12 (44698291433) succeeded. Geospatial diagnostic implementation is committed. Runs #15–#19 failed at Kotlin compilation because ARCore exposes `Session.earth` as nullable (`Earth?`), while the renderer assigned it to non-null `Earth`. The renderer now handles a null Earth safely and reports `NOT AVAILABLE` rather than crashing/compilation failure. Fix commit: `442d057e23a12b2d2663c4ebb0656774b785a61f`. Run #20 (44699746664) is building this exact commit; verify its result and artifact before sending an APK.
 - Intermediate run #6 failed with compile errors (exception import package and stale MainActivity JSONObject references); both were corrected in later commits. Do not distribute any artifact from those earlier runs.
 - Physical-device feedback: user confirms live camera remains smooth while moving/rotating the Samsung Galaxy A32 4G, and STOP / restart works. Camera runtime acceptance is passed. Geospatial/VPS and Depth remain untested.
 
@@ -23,7 +23,7 @@
 5. On device, record whether Geospatial mode configures, Earth reaches TRACKING, the pose accuracies, and the VPS result. If VPS reports NOT_AUTHORIZED, configure the ARCore Cloud API project/app authorization; do not mislabel this as no coverage.
 6. Transparent camera compositor and restoration of the approved UI are tracked in [Issue #21](https://github.com/Hoohaahaa/Monument/issues/21). Preserve Camera / Place / Create / Publish. The current native buttons/status panel are temporary diagnostics, not product design.
 7. Then feed pose into first-person Earth/terrain and Surface engine; evaluate multi-resolution terrain/contours.
-8. CI run #17 (44699284248) first failed during Gradle dependency resolution with many unrelated artifacts unavailable from configured repositories; this looked like a transient repository/network resolution failure, not a Kotlin compile diagnostic. Failed job was re-run as attempt 2. Check latest status before sharing any APK.
+8. CI run #17 attempt 2 and runs #18–#19 exposed the actual Kotlin compile error at `CameraBackgroundRenderer.kt:139`: nullable `Session.earth` was assigned to non-null `Earth`. This was fixed in commit `442d057e23a12b2d2663c4ebb0656774b785a61f`; run #20 is the verification build. Earlier dependency-resolution noise was not the final blocker.
 
 ## Never do
 
