@@ -27,6 +27,12 @@
 8. **Then → UI COMPOSITOR** — Issue [#21](https://github.com/Hoohaahaa/Monument/issues/21): transparent WebView over native camera + versioned bridge.
 9. **Then → SPATIAL RENDERER** — first-person terrain, contours, labels, world-anchored Surfaces.
 
+## Latest device result · 2026-11-20
+- User reports: `Earth State: PAUSED`; UI remains at `waiting for valid global pose` for 2–3 minutes.
+- VPS reports `ERROR_NOT_AUTHORIZED`.
+- Interpretation: no valid global pose was produced in this run; VPS authorization is a separate blocker and does not establish lack of local VPS coverage. Waiting longer is not a useful next step.
+- Next investigation: verify Geospatial session/config result and precise-location grant; inspect Cloud project/API authorization and the exact VPS request path. Do not mark Geospatial or VPS as passed.
+
 ## Next device check
 Install the newly built diagnostic APK. Accept the Geospatial privacy prompt and precise location permission. Record:
 - Geospatial session enabled / unsupported / failed.
