@@ -10,23 +10,26 @@
 - New v0.2.0 code adds a native camera-first activity and a GLES/ARCore camera background renderer.
 - New code is committed to feature/android-arcore-geospatial-bridge.
 - Verified camera-passthrough APK: run #10, ID 44698143221, SUCCESS; artifact ID 14611343158. This build contains the core native camera implementation and is ready for A32 testing.
-- Follow-up run #12, ID 44698291433, includes only a clearer waiting-for-first-frame status message; it was still running at last check. It is not a blocker for testing the run #10 camera artifact.
+- Follow-up run #12 (44698291433) succeeded. New Geospatial diagnostic implementation is committed; CI runs #15 (44699268900) and #16 (44699272579) were started for the initial implementation and are being checked. A final import correction was pushed after those runs.
 - Intermediate run #6 failed with compile errors (exception import package and stale MainActivity JSONObject references); both were corrected in later commits. Do not distribute any artifact from those earlier runs.
-- Physical-device feedback: user confirms that OPEN CAMERA now opens the camera on the Samsung Galaxy A32 4G. Treat camera launch as passed. The user has not separately confirmed extended stability, phone-motion behavior, STOP/restart, or Geospatial/VPS; do not infer those capabilities.
+- Physical-device feedback: user confirms live camera remains smooth while moving/rotating the Samsung Galaxy A32 4G, and STOP / restart works. Camera runtime acceptance is passed. Geospatial/VPS and Depth remain untested.
 
 ## Immediate sequence
 
 1. The run #10 APK is compiled and verified; use artifact ID 14611343158 / monument-camera-passthrough-debug for the first device test. Run #12 is a later diagnostic-text-only build and can be checked separately.
 2. Inspect the source diff for lifecycle, rotation, texture binding, and Session.update() threading before changing more code.
-3. Camera launch is now user-confirmed on the physical SM-A325F. Do not ask the user to repeat the basic launch test.
-4. Next, validate sustained live frames while rotating/moving the phone and STOP -> OPEN CAMERA restart. Then implement Geospatial runtime capability and VPS diagnostics as a separate gate.
-5. Only after pose and localization are validated: add transparent WebView composition and feed camera pose into Monument's first-person terrain and Surface engine.
+3. Camera launch, smooth movement/rotation, and STOP/restart are user-confirmed on the physical SM-A325F. Do not ask the user to repeat these checks.
+4. Current branch adds a privacy disclosure, precise-location permission flow, runtime Geospatial support check, WGS84 camera pose accuracy readout, and async VPS availability result. Verify the latest CI run before distributing the APK.
+5. On device, record whether Geospatial mode configures, Earth reaches TRACKING, the pose accuracies, and the VPS result. If VPS reports NOT_AUTHORIZED, configure the ARCore Cloud API project/app authorization; do not mislabel this as no coverage.
+6. Once native pose is validated, implement the transparent camera compositor and restore the approved Monument camera-first UI (Camera / Place / Create / Publish). The current native buttons/status panel are a temporary diagnostic shell, not product design.
+7. Then feed pose into first-person Earth/terrain and Surface engine; evaluate multi-resolution terrain/contours.
 
 ## Never do
 
 - Do not send the old artifact 14610956314 again as a camera build.
 - Do not claim build success equals camera runtime success.
 - Do not ask the user to repeat device model or AR Services installation details already recorded.
-- Do not start with Cesium terrain, VPS or Depth before live camera passthrough is proven.
+- Do not claim Geospatial/VPS/Depth until physical-device runtime results are recorded.
+- Do not treat the temporary native diagnostic controls as the final Monument interface; preserve the approved camera-first web shell and four actions.
 - Do not change production aliases.
 - Update the handoff, this checklist, decisions and Issue #20 after every meaningful test, failure or implementation.
