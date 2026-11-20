@@ -33,6 +33,10 @@ Do not call this release a complete AR experience. Its first acceptance gate is 
 
 ## Build
 
+- Verified CI run #10: https://github.com/Hoohaahaa/Monument/actions/runs/44698143221 (success).
+- Artifact ID: 14611343158; artifact: monument-camera-passthrough-debug.
+- Follow-up run #12 contains a diagnostic status-message improvement and was still running at the last check.
+
 - Android Gradle project: android/
 - JDK: 17
 - Gradle: 8.9
