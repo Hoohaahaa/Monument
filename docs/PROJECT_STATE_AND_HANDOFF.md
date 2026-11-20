@@ -43,6 +43,14 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Existing web preview from earlier prototype: https://monument-field-test-m8cu2wxxp-mos-projects-efbc27a5.vercel.app/
 - Production alias has NOT been changed. Never change production without explicit user approval.
 
+## Physical-device feedback and confirmed blocker (2026-11-20)
+- User installed and opened the current APK on the Samsung Galaxy A32 4G.
+- Reported behavior: app launches, but no live camera preview appears. Tapping Open Camera asks for permission and then returns to the web Create/Surface/Editorial View workflow; Publish does not start a camera.
+- Root cause confirmed in `MainActivity.kt`: the APK loads the old Earth Mesh preview in a WebView and adds a capability-check button. There is no GL camera renderer, no ARCore camera texture binding, and no camera/WebView compositor. The web Open Camera action is therefore not connected to a native camera runtime.
+- The current scheduled-worker `Session.update()` probe is not a valid render-loop foundation and must be replaced with ARCore updates on the GL render thread.
+- Current APK is a probe, not a usable camera app. User should not spend more time configuring Editorial View or publishing to make the camera appear. Keep the installed APK only if useful for comparison; it is safe to close/uninstall. Wait for a replacement build before testing camera again.
+- Tracking issue: https://github.com/Hoohaahaa/Monument/issues/20
+
 ## Native probe status (2026-11-20)
 - Android scaffold exists under `android/`.
 - Package: `dev.monomatter.monument`.
