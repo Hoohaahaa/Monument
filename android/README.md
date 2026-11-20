@@ -58,7 +58,11 @@ Do not call this release a complete AR experience. Its first acceptance gate is 
 
 ## Interface constraint
 
-The current native camera buttons/status panel are temporary diagnostic UI only. They are not the product interface. Preserve the approved camera-first Monument shell and its four actions: Camera / Place / Create / Publish. The next UI milestone is a transparent compositor over the native camera, followed by the real spatial renderer.
+The current native camera buttons/status panel are temporary diagnostic UI only. They are not the product interface. Preserve the approved camera-first Monument shell and its four actions: Camera / Place / Create / Publish. The next UI milestone is a transparent compositor over the native camera, followed by the real spatial renderer. Tracked in [Issue #21](https://github.com/Hoohaahaa/Monument/issues/21).
+
+## Build note
+
+- Run #17 (`44699284248`) failed during Gradle dependency resolution because many unrelated artifacts could not be resolved from the configured Maven repositories before Kotlin compilation. The failed job was retried as attempt 2. Check the final run state; do not share an APK until a successful artifact is verified.
 
 ## Device test checklist
 
