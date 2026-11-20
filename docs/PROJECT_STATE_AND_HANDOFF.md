@@ -59,18 +59,23 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - This result supersedes any assumption that a successful CI build means the Android experience works. Do not distribute this same artifact again as a camera build.
 - Required next release: a new APK with an actual GL-rendered ARCore camera background and transparent Monument overlay. Build/CI success is only a compile gate; user device confirmation remains required.
 
-## Native probe status (2026-11-20)
-- Android scaffold exists under `android/`.
-- Package: `dev.monomatter.monument`.
-- MainActivity hosts a WebView pointed at the current Monument preview and exposes JavaScript interface `MonumentAR`.
-- Explicit action requests camera + precise location permissions and checks ARCore install state.
-- Calls `Session.isGeospatialModeSupported(ENABLED)` and `Session.isDepthModeSupported(AUTOMATIC)`; enables Geospatial and Depth only if supported.
-- Emits `monument:arcore` custom events to WebView with capability/state and camera geospatial pose (lat/lon/altitude/heading/accuracy) when Earth tracking is active.
-- IMPORTANT: this is currently a capability/pose probe only. It does NOT display the ARCore camera background, does NOT provide a valid first-person compositor, and does NOT render terrain/surfaces in the camera. It is not the final AR app.
-- Known engineering risk to review next: current implementation calls `Session.update()` from a scheduled worker without a dedicated GL render thread / camera texture compositor. Before trusting pose cadence or building on it, move ARCore frame updates onto a proper GL/render lifecycle and validate Session lifecycle/thread constraints. Do not overstate current pose bridge reliability.
-- Current WebView URL is hardcoded to the Earth Mesh preview. Review whether this is still the intended web entrypoint before shipping.
+## Current native camera runtime — v0.2.0 (2026-11-20)
+- Version code 2 / version name 0.2.0.
+- The old WebView-first probe has been replaced in code by a native camera-first Activity.
+- New file: android/app/src/main/java/dev/monomatter/monument/CameraBackgroundRenderer.kt.
+- MainActivity now presents native OPEN CAMERA / STOP / OPEN EDITOR controls. The editor opens separately in the external browser; it no longer covers the camera launch screen.
+- Camera path: request Camera permission -> ARCore install/update check -> create/configure default Session -> Session.resume() -> GLSurfaceView queue event attaches Session to renderer -> renderer binds an external OES texture with Session.setCameraTextureName() -> Session.update() runs in GLSurfaceView.Renderer.onDrawFrame() -> Frame.transformCoordinates2d() supplies display-correct texture UVs -> GLES draws camera background.
+- Activity lifecycle pauses GLSurfaceView before Session.pause(), and resumes Session before GLSurfaceView resumes.
+- Geospatial and Depth are intentionally NOT enabled in this milestone. This separates basic camera availability from Geospatial/VPS/Depth capability and avoids making the first gate harder to diagnose.
+- The editor is intentionally separate because current web UI is opaque. Transparent WebView overlay and actual Monument UI compositing are still not implemented.
+- Current scope is camera passthrough only. No terrain, Cairn grid, spatial surfaces, WGS84 anchors, VPS or occlusion are rendered yet.
+- This source has not yet been validated on the physical SM-A325F. CI compile success is not proof that camera feed appears on-device.
+- Android docs: android/README.md. Decision log: docs/DECISIONS.md. Compact next-session checklist: docs/NEXT_SESSION.md.
+- Tracking issue: https://github.com/Hoohaahaa/Monument/issues/20
 
 ## Build history
+- v0.2.0 camera passthrough workflow run #10: https://github.com/Hoohaahaa/Monument/actions/runs/44698143221 — triggered by commit a16039a14d16ec0ec1c7547c8c5450978c58a4d3; status was in_progress at the time of the last check. Confirm final status and artifact before distributing.
+- Expected artifact name: monument-camera-passthrough-debug. No new APK should be sent until this run succeeds and the artifact is verified.
 - Workflow: `.github/workflows/android-arcore-build.yml`
 - Workflow builds Debug APK using JDK 17 and Gradle 8.9; uploads artifact for 7 days.
 - Run #1: https://github.com/Hoohaahaa/Monument/actions/runs/44696297862 — FAILED due Java/Kotlin target mismatch.
@@ -83,14 +88,15 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - APK has compiled successfully but has NOT been installed or run on a physical device. No Geospatial/Depth support result is known yet.
 
 ## Open work / next steps
-1. Provide the actual Debug APK to the user for installation on their SM-A325F, with clear warning that it is a probe build, not the complete camera AR experience.
-2. On-device probe: user grants camera + precise location, taps explicit start, report actual Geospatial and Depth booleans, Earth tracking state, VPS localization and pose accuracies. Capture logs/status and device Android version.
-3. Fix ARCore lifecycle: implement a proper GL thread (GLSurfaceView/EGL), camera texture binding via `Session.setCameraTextureName`, call `Session.update()` on render loop, handle pause/resume, context loss, permission and install/update flows.
-4. Implement camera compositor: ARCore camera background in GL surface + transparent WebView overlay for Monument UI; avoid simultaneous WebView getUserMedia camera access.
-5. Feed validated ARCore camera pose and geospatial pose into shared coordinate frame (ENU/EUS); show diagnostic tracking/accuracy status.
-6. Integrate CesiumJS / terrain engine into first-person camera with multi-resolution terrain, Cairn-inspired grid/contours and correct user-centered camera orientation.
-7. Implement multiple persistent geospatial Surface objects and reuse Point/Column/Trajectory/Loop contracts.
-8. Depth/occlusion only if runtime/device supports it; provide graceful fallback.
+1. Check workflow run #10 and fix any compile/build failure. Verify the produced v0.2.0 APK artifact before sharing.
+2. User installs v0.2.0 and confirms that OPEN CAMERA shows live camera passthrough. No Editorial View / Publish setup is required.
+3. If camera fails, inspect Logcat and fix native Session / GL / texture / lifecycle issues before proceeding.
+4. After camera acceptance, add Geospatial and Depth runtime capability diagnostics as a separate gate; check VPS availability on-device and record accuracy.
+5. Implement a transparent WebView/native composition layer only after the camera renderer is stable; editor must not obscure camera.
+6. Feed validated camera pose into the shared local ENU/EUS frame and first-person Earth renderer.
+7. Evaluate CesiumJS or equivalent multi-resolution terrain and Cairn-inspired grid/contours.
+8. Implement multiple persistent geospatial Surfaces and integrate existing Point/Column/Trajectory/Loop/WebXR work.
+9. Update PROJECT_STATE_AND_HANDOFF.md, DECISIONS.md and NEXT_SESSION.md after every material change, test, failure or decision. Add commit SHA, workflow run, artifact ID, device observations and exact next action.
 
 ## Acceptance gates (must not skip)
 - Build success is not runtime success.
@@ -114,4 +120,4 @@ Target device supplied by user: Samsung Galaxy A32 4G, model SM-A325F. User conf
 - Every future path not selected must be recorded here with rationale; create/update GitHub issues for untracked work.
 
 ## Continuity instructions for future chats / agents
-Read this file and `docs/product/FIRST_PERSON_GEOSPATIAL_PRODUCT_DIRECTION.md`, `android/README.md`, and open issues #17 and #19 before changing architecture. Continue from the current branch; inspect actual repository state and workflow runs. Do not claim implementation, tests, deployment or physical-device behavior unless verified. Update this document after each material change and include commit SHA, workflow run, artifacts, tests, device observations and next exact action. Keep explanations concise and provide working outputs, not only plans.
+Read this file, `docs/NEXT_SESSION.md`, `docs/DECISIONS.md`, `docs/product/FIRST_PERSON_GEOSPATIAL_PRODUCT_DIRECTION.md`, `android/README.md`, and open issues #17, #19 and #20 before changing architecture. Continue from the current branch; inspect actual repository state and workflow runs. Do not claim implementation, tests, deployment or physical-device behavior unless verified. Update this document after each material change and include commit SHA, workflow run, artifacts, tests, device observations and next exact action. Keep explanations concise and provide working outputs, not only plans.
