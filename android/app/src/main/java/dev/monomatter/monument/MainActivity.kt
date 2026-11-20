@@ -149,6 +149,13 @@ class MainActivity : Activity() {
         fun stopGeospatial() { runOnUiThread { stopCamera() } }
 
         @JavascriptInterface
+        fun recheckVps() {
+            runOnUiThread {
+                if (::glView.isInitialized) glView.queueEvent { renderer.recheckVpsAtCurrentPose() }
+            }
+        }
+
+        @JavascriptInterface
         fun getRuntimeInfo(): String {
             val active = cameraRequested
             return "{\"bridgeVersion\":1,\"platform\":\"android\",\"cameraActive\":$active}"
