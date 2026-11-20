@@ -52,4 +52,4 @@ Evidence before certainty. Product autonomy and explicit integration contracts. 
 
 ## Persistent project context
 
-For the current product definition, architecture decisions, implementation status, build history, rejected paths, and next steps, read [docs/PROJECT_STATE_AND_HANDOFF.md](docs/PROJECT_STATE_AND_HANDOFF.md) first. Keep this handoff updated after every material change so work can continue across chats without losing context.
+For continuity across chats, read [docs/NEXT_SESSION.md](docs/NEXT_SESSION.md), [docs/PROJECT_STATE_AND_HANDOFF.md](docs/PROJECT_STATE_AND_HANDOFF.md), and [docs/DECISIONS.md](docs/DECISIONS.md) first. The handoff is the source of truth for implementation status, build history, failures, rejected paths, and exact next steps. Keep this handoff updated after every material change so work can continue across chats without losing context.
