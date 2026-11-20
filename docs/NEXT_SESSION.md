@@ -88,3 +88,15 @@ Last updated: 2026-11-20
 - VPS is optional; absence must degrade capability/precision gracefully, not block Monument globally.
 - Iran is the current test region. Region-specific VPS coverage, network access, authorization, and device/service compatibility must be diagnosed separately; do not assume one is the cause.
 - Full architecture and confidence policy are documented in `docs/GEOSPATIAL_DIAGNOSTICS.md`.
+
+
+## VPS status update and development priority — 2026-11-20
+
+- User reports the VPS line still reads UNAVAILABLE.
+- The planned test of moving >=100 m to trigger a fresh location query has not been performed yet.
+- The APK/build number associated with this latest report is not confirmed. Do not assume the report validates the re-query fix in build #39 until the installed version is confirmed.
+- VPS is a first-class capability and deserves a dedicated verification workstream, but it is not the gate for all Monument development. Google's documentation states that Geospatial can work without VPS coverage and that GPS may be sufficient outdoors with clear sky. VPS is most valuable where GPS is weak; it is location-specific.
+- Next convenient field check only (no travel required): confirm installed build; record exact VPS enum; after >=100 m movement, wait for a fresh query and compare. Capture H/V/yaw alongside it. Do not pressure the user to perform this now.
+- Engineering work to continue meanwhile: formalize the versioned spatial data contract and quality/provenance model; preserve the three localization layers; proceed with the transparent WebView compositor and native bridge without making VPS a hard dependency.
+- Before implementing precision-sensitive placement, add diagnostics for VPS query timestamp, freshness, privacy-safe queried location, and distinct network/auth/resource errors. Do not confuse UNAVAILABLE with an error.
+- Current field evidence is limited to one user's reported location(s) in Iran. It does not establish nationwide VPS coverage or lack of coverage.
