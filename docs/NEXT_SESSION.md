@@ -9,7 +9,8 @@
 - The failure is documented in the handoff and Issue #20. Do not ask the user to repeat the old test or configure Editorial View / Publish.
 - New v0.2.0 code adds a native camera-first activity and a GLES/ARCore camera background renderer.
 - New code is committed to feature/android-arcore-geospatial-bridge.
-- Latest CI run at the time this note was written: run #10, ID 44698143221, triggered by commit a16039a14d16ec0ec1c7547c8c5450978c58a4d3; check its current status before proceeding.
+- Latest CI run for the latest renderer source: run #12, ID 44698291433, triggered by commit 4b5818e96ad5e17ec29d7195f0dbac8de5bd4e48; it was queued at the last check. Check its final status before proceeding. Earlier intermediate runs are not release candidates.
+- Intermediate run #6 failed with compile errors (exception import package and stale MainActivity JSONObject references); both were corrected in later commits. Do not distribute any artifact from those earlier runs.
 - No v0.2.0 physical-device test has happened yet. Do not claim the camera works until the user confirms it.
 
 ## Immediate sequence
