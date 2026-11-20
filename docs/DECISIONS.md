@@ -66,3 +66,14 @@ This file records accepted decisions and rejected paths so future sessions do no
 **Next implementation:** Compose the existing web UI transparently above the native ARCore camera, connect it through a versioned native bridge, and ensure native-hosted mode does not start a second browser camera stream. Track in [Issue #21](https://github.com/Hoohaahaa/Monument/issues/21).
 
 **Not selected:** Rebuild Monument as a separate native-only interface. Reason: it would discard the accepted shell and duplicate the product rather than add native camera/geospatial capability to the same experience.
+
+
+## 2026-11-20 — Null-safe Geospatial Earth access
+
+**Observed failure:** Android builds #15–#19 failed at Kotlin compilation because `Session.earth` is nullable (`Earth?`) but the renderer assigned it to non-null `Earth`.
+
+**Fix:** Handle a missing Earth object explicitly and report `NOT AVAILABLE`; do not assume Geospatial is initialized or supported.
+
+**Evidence:** Commit `442d057e23a12b2d2663c4ebb0656774b785a61f`; [build #20 passed](https://github.com/Hoohaahaa/Monument/actions/runs/44699746664); artifact `14612905251`.
+
+**Still unknown:** Whether the target phone can configure Geospatial, reach Earth TRACKING, obtain VPS availability, or support Depth. Only a physical-device test can establish these.
