@@ -40,6 +40,7 @@ class CameraBackgroundRenderer(
     private var lastStatusAt = 0L
     private var lastGeoStatusAt = 0L
     private var vpsCheckStarted = false
+    @Volatile private var vpsAvailability = "NOT CHECKED"
 
     private val quadVertices = directBuffer(floatArrayOf(
         -1f, -1f, 1f, -1f,
@@ -56,12 +57,14 @@ class CameraBackgroundRenderer(
         session = value
         textureBound = false
         vpsCheckStarted = false
+        vpsAvailability = "NOT CHECKED"
         lastGeoStatusAt = 0L
     }
 
     fun setGeospatialEnabled(value: Boolean) {
         geospatialEnabled = value
         vpsCheckStarted = false
+        vpsAvailability = "NOT CHECKED"
         lastGeoStatusAt = 0L
     }
 
@@ -159,7 +162,7 @@ class CameraBackgroundRenderer(
             String.format(
                 Locale.US,
                 "MONUMENT / GEOLOCALIZATION\nEarth: TRACKING · WGS84/EUS\n%.6f°, %.6f° · %.1f m ellipsoid\nH ±%.1f m · V ±%.1f m · yaw ±%.1f°",
-                lat, lon, altitude, horizontal, vertical, yawAccuracy
+                lat, lon, altitude, horizontal, vertical, yawAccuracy, vpsAvailability
             )
         )
 
