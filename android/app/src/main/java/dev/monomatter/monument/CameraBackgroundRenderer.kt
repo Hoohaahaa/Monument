@@ -4,7 +4,7 @@ import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.view.Surface
-import com.google.ar.core.CameraNotAvailableException
+import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.Coordinates2d
 import com.google.ar.core.Frame
 import com.google.ar.core.Session
