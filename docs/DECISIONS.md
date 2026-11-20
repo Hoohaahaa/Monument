@@ -92,3 +92,14 @@ This file records accepted decisions and rejected paths so future sessions do no
 **Decision / next step:** Use the manual `RECHECK VPS AT CURRENT LOCATION` control once, when convenient, and interpret the result together with `pose Δ` and pose age. No further relocation is required. If a fresh result is `UNAVAILABLE` and pose delta is small, record VPS as unavailable at that queried point and stop repeated checks there; continue device-local and local-reference positioning. If the enum is an explicit ERROR, diagnose that separate failure path.
 
 **Implementation direction remains unchanged:** Proceed with the transparent WebView compositor and versioned native bridge over the existing ARCore camera. Do not replace the approved web UI, introduce a duplicate browser camera stream, or make VPS a global prerequisite.
+
+
+## 2026-11-20 — Product progress reset after user feedback
+
+**User feedback:** repeated APKs showed only a camera with no visible Monument outcome. This is valid feedback; build success was incorrectly treated as user-visible progress.
+
+**Confirmed rejected implementation state:** native WebView bridge existed but `app.js` did not call it; the Open Camera path always used browser `getUserMedia()`. Native diagnostics controls were constructed but not attached to the visible root view. The bridge lacked a JavaScript-accessible VPS recheck method and the web HUD had no visible recheck control. A per-deployment URL also risked stale web content.
+
+**Decision:** no more camera-only APKs as milestones. A release is not accepted unless the native bridge is demonstrably invoked, native ARCore Geospatial telemetry is visible in the web HUD, and a visible VPS recheck action reaches the native renderer. Build #48 compiles the recheck method but is not final delivery because the WebView URL was subsequently changed to a stable branch preview alias. Build #49 is the correct candidate and must be verified before sharing.
+
+**First user-visible product milestone after bridge proof:** place a real test Moment/anchor and show its anchoring scope and quality; never label it world-locked until actual ARCore anchor creation and tracking is implemented. Keep three-layer positioning; VPS remains optional.
