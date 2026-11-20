@@ -38,3 +38,11 @@ This file records accepted decisions and rejected paths so future sessions do no
 - CesiumJS or an equivalent multi-resolution geospatial renderer remains the preferred terrain-engine evaluation.
 - Depth/occlusion and VPS must be capability- and location-gated.
 - Production Vercel aliases must not be changed without explicit user approval.
+
+## 2026-11-20 — Camera launch confirmed on physical Samsung Galaxy A32
+
+**Result:** User reports that the v0.2.0 `OPEN CAMERA` action now opens the camera on the SM-A325F. This closes the basic camera-launch gate that failed in v0.1.0.
+
+**Scope of evidence:** This is a user-reported device result, not a CI inference. It does not by itself establish sustained frame stability during phone movement, STOP/restart reliability, ARCore Geospatial support, VPS availability/accuracy, Depth support, world-locked anchors, or a complete AR experience. Keep those as separate validation gates.
+
+**Next:** Validate stable live frames while moving/rotating the phone and STOP -> OPEN CAMERA restart; then implement runtime Geospatial/VPS diagnostics.
