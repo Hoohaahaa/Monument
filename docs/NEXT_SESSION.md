@@ -167,3 +167,37 @@ Last updated: 2026-11-20
 2. Independently continue implementation: inspect `MainActivity.kt`, `CameraBackgroundRenderer.kt`, manifest/Gradle, `index.html`, app JS/CSS, and `engine/native-arcore-bridge.js`.
 3. Implement transparent Android WebView compositor and versioned JS bridge over native ARCore camera without starting a second browser `getUserMedia()` stream or replacing the approved camera-first web shell.
 4. Preserve the three localization layers and record rejected alternatives/reasons in `docs/DECISIONS.md`.
+
+
+## 2026-11-20 — User feedback: builds were not producing visible progress; bridge integration root cause found
+
+User explicitly reported that repeated APKs only opened a camera and showed no meaningful Monument interaction or requested diagnostics. Treat this as a product/engineering failure, not a user testing failure. Stop shipping camera-only builds as milestones.
+
+**Confirmed code defects found by inspecting the branch:**
+1. `app.js` camera handler still called `navigator.mediaDevices.getUserMedia()` unconditionally. It did not call `window.MonumentNativeAR.start()`, despite the bridge script and native Android bridge existing. Thus the browser camera could open while the native ARCore session and geospatial diagnostics never started.
+2. `MainActivity` created diagnostic controls (including the native VPS recheck button) but the root view only added `glView` and `webView`; the native diagnostic controls were not attached to the visible view hierarchy. The user therefore had no way to see/use those controls.
+3. The app's native bridge did not expose manual VPS recheck to JavaScript, and the web UI had no visible recheck control.
+4. Earlier preview URL was pinned to an individual Vercel deployment. A stable branch preview alias is now used to prevent the APK from pointing at a stale web bundle.
+
+**Corrective commits on `feature/android-arcore-geospatial-bridge`:**
+- `58c3e7618f0e84efc7751225471cac9be9782a2c`: route Android camera launch through `MonumentNativeAR.start()` when bridge is available; browser camera remains as non-native fallback.
+- `0d8f755aec6c1467d10efaa65f635779a57edfc8`: expose native `recheckVps()` through the JS interface.
+- `b11a6bdca6cb93b3f3767750d14439380f353cac`: add bridge wrapper for manual VPS recheck.
+- `2c2adf5efd50000e68f92bf2c583dc1ee78e1b93`: add visible `RECHECK VPS` control in camera HUD.
+- `6edcb1ebf10c2115aeefc4b319847d85112d505b`: wire visible control to native bridge.
+- `ff1040bacbe939007c28ef5f33e6d7700cc34846`: point WebView to stable branch preview alias.
+
+**Verification so far:**
+- Android Build #48 succeeded: https://github.com/Hoohaahaa/Monument/actions/runs/44765467693 (includes native recheck method; not final delivery because its WebView URL was subsequently switched to stable branch alias).
+- Vercel deployment of latest web branch is READY: `https://monument-field-test-git-feature-an-7c1055-mos-projects-efbc27a5.vercel.app/`.
+- Deployed `app.js`, bridge JS, and `index.html` return HTTP 200 and include native-camera routing and visible VPS recheck control.
+- Android Build #49 is running for the stable preview URL: https://github.com/Hoohaahaa/Monument/actions/runs/44765932954. Do not send an APK until run succeeds and APK/signature are verified.
+
+**Next milestone must be visibly useful on device, not just camera passthrough:**
+1. Start native ARCore from the web `Open Camera` action; no duplicate browser `getUserMedia()` camera in native mode.
+2. Show live ARCore Geospatial status in `geoStatus`: Earth tracking state, WGS84 lat/lon, ellipsoid altitude, horizontal/vertical/yaw uncertainty, VPS status, query age, `pose Δ`, and pose age.
+3. Expose `RECHECK VPS` button in the web camera HUD and verify it reaches the native renderer.
+4. Verify visible feedback for camera permission denial, Geospatial permission denial, session/configuration failure, and tracking-not-ready. Do not hide diagnostic UI behind native views.
+5. Only after this works, implement the first real spatial interaction: place a test Moment at a selected geospatial/local anchor and render it with an explicitly reported anchoring scope/quality. Do not claim world-lock until actual anchor tracking is implemented and verified.
+
+User has already spent too much time installing and reporting builds. Do not ask for another install until Build #49 is verified and its release note clearly says exactly what new on-screen data/controls they should see. Do not ask them to travel or repeat VPS movement tests.
