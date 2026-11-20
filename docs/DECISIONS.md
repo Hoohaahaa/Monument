@@ -18,62 +18,24 @@ This file records accepted decisions and rejected paths so future sessions do no
 
 **Not selected:** Continue polling Session.update() from a scheduled worker thread. Reason: ARCore frame updates and GL camera texture consumption belong to a coordinated GL render lifecycle; the worker-thread probe was not a valid foundation.
 
-## 2026-11-20 — Keep Geospatial and Depth out of the first camera gate
+## 2026-11-20 — Preserve the approved Monument UI
 
-**Decision:** The v0.2.0 camera-first milestone starts a default ARCore Session without enabling Geospatial or Depth. Add those only after camera passthrough is accepted on the actual phone.
+**Decision:** The native OPEN CAMERA / STOP / OPEN EDITOR screen is a temporary engineering diagnostic. Preserve the approved camera-first shell and Camera / Place / Create / Publish actions; later compose it transparently over the native camera with a versioned bridge.
 
-**Reason:** Camera availability, Geospatial support, VPS coverage, and Depth support are separate capabilities. Coupling them would make a basic camera failure harder to diagnose and would risk implying device capabilities that have not been verified.
+**Reason:** The native mock is not the accepted product UI.
 
-## 2026-11-20 — Do not embed the opaque web editor over the camera yet
+## 2026-11-20 — Camera runtime accepted on physical Samsung Galaxy A32
 
-**Decision:** The native camera screen opens the web editor separately through an external browser action. A transparent WebView overlay is a later milestone.
+**Result:** User confirms live camera remains smooth while moving/rotating and STOP/restart works on SM-A325F. Camera acceptance is closed.
 
-**Reason:** The current editor is an opaque web page. Placing it above the native camera would hide the camera feed. Transparent composition requires explicit web-page transparency, z-order and lifecycle coordination; it must be implemented and tested as its own gate.
+## 2026-11-20 — Geospatial authorization diagnosis
 
-## Existing product decisions retained
+**Observed:** On the physical device, Earth Tracking is PAUSED and the user reports ERROR_NOT_AUTHORIZED for Earth/VPS. User confirms precise location is enabled.
 
-- First Person is the primary Monument experience; Globe/Orbit is secondary.
-- Preserve existing Leaflet/editor, Moment and Surface concepts, Point, Column, Trajectory, Loop, Pause/Resume and WebXR work.
-- A single small terrain tile or black wireframe globe is not the first-person Earth renderer.
-- CesiumJS or an equivalent multi-resolution geospatial renderer remains the preferred terrain-engine evaluation.
-- Depth/occlusion and VPS must be capability- and location-gated.
-- Production Vercel aliases must not be changed without explicit user approval.
+**Root cause direction:** Google documents EarthState.ERROR_NOT_AUTHORIZED for a disabled ARCore API / wrong Cloud project, invalid API key, or keyless OAuth Android client whose package name + signing SHA-1 do not match. The app's Gradle dependencies included Play Services Location but omitted play-services-auth.
 
-## 2026-11-20 — Camera launch confirmed on physical Samsung Galaxy A32
+**Decision:** Use Google's preferred Keyless flow. Add com.google.android.gms:play-services-auth; do not add an API key merely because the manifest has none. Build the app, inspect the exact APK signing SHA-1, then register that fingerprint with an OAuth Android client for dev.monomatter.monument and enable ARCore API in the same Cloud project.
 
-**Result:** User reports that the v0.2.0 `OPEN CAMERA` action now opens the camera on the SM-A325F. This closes the basic camera-launch gate that failed in v0.1.0.
+**Evidence:** [Google ARCore authorization troubleshooting](https://developers.google.com/ar/develop/authorization/troubleshooting?platform=android) · [EarthState reference](https://developers.google.com/ar/reference/java/com/google/ar/core/Earth.EarthState).
 
-**Scope of evidence:** This is a user-reported device result, not a CI inference. It does not by itself establish sustained frame stability during phone movement, STOP/restart reliability, ARCore Geospatial support, VPS availability/accuracy, Depth support, world-locked anchors, or a complete AR experience. Keep those as separate validation gates.
-
-**Next:** Validate stable live frames while moving/rotating the phone and STOP -> OPEN CAMERA restart; then implement runtime Geospatial/VPS diagnostics.
-
-
-## 2026-11-20 — Camera runtime accepted; Geospatial diagnostics next
-
-**Physical device result:** User confirms the rear camera remains live and smooth while moving/rotating the Samsung Galaxy A32 4G (SM-A325F), and STOP/restart works. Camera runtime acceptance is closed.
-
-**Next implementation:** Add a privacy disclosure and precise-location permission flow; check `Session.isGeospatialModeSupported` before enabling `Config.GeospatialMode.ENABLED`; report Earth tracking/state and WGS84 camera pose with horizontal, vertical and yaw accuracy; query VPS asynchronously at the localized camera position.
-
-**Not yet established:** Geospatial mode support/configuration on this device, Earth TRACKING, VPS coverage or authorization, Depth, stable world-locked anchors, or any completed spatial rendering. A VPS `ERROR_NOT_AUTHORIZED` result must be treated as cloud app/project authorization, not as no VPS coverage.
-
-**UI constraint:** The current native OPEN CAMERA / STOP / OPEN EDITOR screen is a temporary diagnostic shell. It is not the final Monument interface. Preserve the approved one-page camera-first shell and its Camera / Place / Create / Publish actions; next UI work must compose it transparently over the native camera rather than keep or polish the mock native screen.
-
-
-## 2026-11-20 — Preserve the approved Monument UI; native controls are diagnostic only
-
-**Decision:** The native three-button OPEN CAMERA / STOP / OPEN EDITOR screen is a temporary engineering diagnostic, not the final app interface. The product UI remains the approved one-page camera-first Monument shell with Camera / Place / Create / Publish actions.
-
-**Next implementation:** Compose the existing web UI transparently above the native ARCore camera, connect it through a versioned native bridge, and ensure native-hosted mode does not start a second browser camera stream. Track in [Issue #21](https://github.com/Hoohaahaa/Monument/issues/21).
-
-**Not selected:** Rebuild Monument as a separate native-only interface. Reason: it would discard the accepted shell and duplicate the product rather than add native camera/geospatial capability to the same experience.
-
-
-## 2026-11-20 — Null-safe Geospatial Earth access
-
-**Observed failure:** Android builds #15–#19 failed at Kotlin compilation because `Session.earth` is nullable (`Earth?`) but the renderer assigned it to non-null `Earth`.
-
-**Fix:** Handle a missing Earth object explicitly and report `NOT AVAILABLE`; do not assume Geospatial is initialized or supported.
-
-**Evidence:** Commit `442d057e23a12b2d2663c4ebb0656774b785a61f`; [build #20 passed](https://github.com/Hoohaahaa/Monument/actions/runs/44699746664); artifact `14612905251`.
-
-**Still unknown:** Whether the target phone can configure Geospatial, reach Earth TRACKING, obtain VPS availability, or support Depth. Only a physical-device test can establish these.
+**Still unverified:** Whether the Cloud project and OAuth client are configured correctly; Earth TRACKING; valid WGS84 pose; VPS coverage; Depth; world anchors; terrain rendering.
