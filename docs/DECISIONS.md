@@ -83,3 +83,12 @@ This file records accepted decisions and rejected paths so future sessions do no
 **Decision:** Do not ask the user to keep moving around. Expose the distance between the last queried coordinate and latest tracked ARCore pose, show pose age, and add a deliberate manual recheck action with a cooldown. If a manual recheck at the current pose returns a fresh UNAVAILABLE and query-to-pose distance is small, mark that spot as VPS-uncovered and move on to the approved GPS/visual-inertial and local-reference layers. Investigate auth/network only for explicit error enums.
 
 **Not selected:** Shorten the automatic 100 m threshold aggressively or poll continuously. Reason: it can create unnecessary requests/quota use and still does not clarify whether the query point matched the current pose. A user-triggered recheck is explicit and rate-limited.
+
+
+## 2026-11-20 — Build #44 adds same-location VPS verification
+
+**Result:** Build #44 succeeded and its APK was downloaded and verified. Commit `593652452c1b272b0b7dbf6c27b414bb53660ebd`; artifact `14630678046`; package `dev.monomatter.monument`, version `0.2.1` / code `3`; signing SHA-1 `eb565d1f058175eeb0a5c0c4d7233d99bade6867`.
+
+**Decision / next step:** Use the manual `RECHECK VPS AT CURRENT LOCATION` control once, when convenient, and interpret the result together with `pose Δ` and pose age. No further relocation is required. If a fresh result is `UNAVAILABLE` and pose delta is small, record VPS as unavailable at that queried point and stop repeated checks there; continue device-local and local-reference positioning. If the enum is an explicit ERROR, diagnose that separate failure path.
+
+**Implementation direction remains unchanged:** Proceed with the transparent WebView compositor and versioned native bridge over the existing ARCore camera. Do not replace the approved web UI, introduce a duplicate browser camera stream, or make VPS a global prerequisite.
