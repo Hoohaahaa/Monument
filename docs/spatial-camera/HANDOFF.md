@@ -221,3 +221,12 @@ Next engineering gate: validate on a real Android phone; then choose and impleme
 - Important technical distinction: ARCore Geospatial is a native Android SDK, not a browser JavaScript API. It combines sensors/GPS with VPS where available and supports WGS84, Terrain and Rooftop anchors. A high-fidelity browser-first product may require a small Android host/bridge for the AR session while retaining the web UI for authoring and content.
 - The current Three.js globe / single elevation tile and compass overlay are explicitly prototypes, not the desired First Person Earth experience.
 - No ARCore implementation or device validation is claimed by this documentation commit. The next engineering task is a compatibility / native proof-of-capability on the actual target Android device, while preserving the no-install browser baseline.
+
+
+## 2026-11-20 — Android ARCore bridge scaffold
+
+- New isolated branch: `feature/android-arcore-geospatial-bridge`.
+- Added `android/` Gradle/Kotlin Android host scaffold, WebView wrapper, explicit native `MonumentAR` JavaScript interface, runtime checks for ARCore Geospatial and Depth support, and geospatial pose event payloads.
+- Added `engine/native-arcore-bridge.js` and loaded it from `index.html`; the web app can detect the bridge and receive `monument:native-pose`, `monument:native-capabilities`, and `monument:native-state` events.
+- Samsung Galaxy A32 and A32 5G are present in Google's ARCore supported-device catalogue. Their entries do not list Depth API support and do not show an explicit Geospatial exclusion. Geospatial support remains a runtime check on the actual device. See `docs/device/SAMSUNG_GALAXY_A32_ARCORE_ASSESSMENT.md`.
+- Important: this is an unbuilt/unverified capability + pose probe scaffold. It does not yet render the ARCore camera texture behind the WebView, does not provide the final first-person renderer, and does not implement persistent Surface anchors. Do not call it a working AR app. Next gate: Android Studio build, fix API/build issues, test on the user's A32, then implement GL camera compositor and world-frame integration.
