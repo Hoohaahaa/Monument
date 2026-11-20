@@ -322,6 +322,6 @@ class MainActivity : Activity() {
         private const val REQUEST_LOCATION_PERMISSION = 703
         private const val PREFERENCES = "monument_runtime"
         private const val GEOSPATIAL_CONSENT_ACCEPTED = "geospatial_consent_accepted"
-        private const val EDITOR_URL = "https://monument-field-test-m8cu2wxxp-mos-projects-efbc27a5.vercel.app/"
+        private const val EDITOR_URL = "https://monument-field-test-cdr7vpmv3-mos-projects-efbc27a5.vercel.app/"
     }
 }
