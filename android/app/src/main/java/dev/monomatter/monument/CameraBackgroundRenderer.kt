@@ -140,13 +140,13 @@ class CameraBackgroundRenderer(
         lastGeoStatusAt = now
 
         val earth: Earth = active.earth ?: run {
-            onStatus("MONUMENT / GEOLOCALIZATION\\nEarth: NOT AVAILABLE · waiting for Geospatial session…")
+            onStatus("MONUMENT / GEOLOCALIZATION\nEarth: NOT AVAILABLE · waiting for Geospatial session…")
             return
         }
         val earthTracking = earth.trackingState
         val earthState = earth.earthState
         if (earthTracking != TrackingState.TRACKING) {
-            onStatus("MONUMENT / GEOLOCALIZATION\\nEarth: ${earthTracking.name} · State: ${earthState.name}\\nVPS: ${vpsAvailability}\\nWaiting for a valid global pose…")
+            onStatus("MONUMENT / GEOLOCALIZATION\nEarth: ${earthTracking.name} · State: ${earthState.name}\nVPS: ${vpsAvailability}\nWaiting for a valid global pose…")
             return
         }
 
@@ -161,7 +161,7 @@ class CameraBackgroundRenderer(
         onStatus(
             String.format(
                 Locale.US,
-                "MONUMENT / GEOLOCALIZATION\\nEarth: TRACKING · WGS84/EUS\\n%.6f°, %.6f° · %.1f m ellipsoid\\nH ±%.1f m · V ±%.1f m · yaw accuracy ±%.1f°\\nVPS: %s",
+                "MONUMENT / GEOLOCALIZATION\nEarth: TRACKING · WGS84/EUS\n%.6f°, %.6f° · %.1f m ellipsoid\nH ±%.1f m · V ±%.1f m · yaw accuracy ±%.1f°\nVPS: %s",
                 lat, lon, altitude, horizontal, vertical, yawAccuracy, vpsAvailability
             )
         )
