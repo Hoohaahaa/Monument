@@ -4,7 +4,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-feature android:name="android.hardware.camera.ar" android:required="false" />
-    <application android:theme="@android:style/Theme.Material.Light.NoActionBar" android:label="Monument Native Probe" android:usesCleartextTraffic="false">
+    <application android:theme="@android:style/Theme.Material.Light.NoActionBar" android:label="Monument" android:usesCleartextTraffic="false">
         <meta-data android:name="com.google.ar.core" android:value="optional" />
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
